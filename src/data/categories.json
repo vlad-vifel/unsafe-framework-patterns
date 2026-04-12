@@ -1,0 +1,26 @@
+[
+  {
+    "id": "user-input-and-injection",
+    "name": "User Input & Injection"
+  },
+  {
+    "id": "rendering-and-dom",
+    "name": "Rendering & DOM"
+  },
+  {
+    "id": "state-and-data-handling",
+    "name": "State & Data Handling"
+  },
+  {
+    "id": "routing-and-access-control",
+    "name": "Routing & Access Control"
+  },
+  {
+    "id": "global-state-and-data-access",
+    "name": "Global State & Data Access"
+  },
+  {
+    "id": "dependencies-and-external-libraries",
+    "name": "Dependencies & External Libraries"
+  }
+]

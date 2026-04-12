@@ -1,0 +1,1995 @@
+[
+  {
+    "id": "dom-insecure-html-injection-taint",
+    "title": "innerHTML DOM XSS",
+    "framework": "general",
+    "category": "user-input-and-injection",
+    "description": "Untrusted user input flows into innerHTML, outerHTML, insertAdjacentHTML, or jQuery HTML methods, allowing arbitrary script execution. Sanitize with DOMPurify before any DOM insertion.",
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-26269"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst query = new URLSearchParams(window.location.search).get('q');\ndocument.getElementById('output').innerHTML = query;\n// Attacker visits /?q=<img src=x onerror=alert(1)>"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport DOMPurify from 'dompurify';\nconst query = new URLSearchParams(window.location.search).get('q');\ndocument.getElementById('output').innerHTML = DOMPurify.sanitize(query);"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-insecure-document-write-taint",
+    "title": "document.write DOM XSS",
+    "framework": "general",
+    "category": "user-input-and-injection",
+    "description": "Untrusted user input flows into document.write() or document.writeln(), allowing arbitrary script injection and document structure alteration. Refactor to use safe DOM manipulation methods instead.",
+    "tags": [
+      "dom",
+      "document.write",
+      "xss",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-26269"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst name = window.location.search.slice(1);\ndocument.write('<h1>Hello ' + name + '</h1>');\n// Attacker: ?<script>alert(1)</script>"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst name = new URLSearchParams(window.location.search).get('name') ?? '';\nconst h1 = document.createElement('h1');\nh1.textContent = 'Hello ' + name;\ndocument.body.appendChild(h1);"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-insecure-javascript-url",
+    "title": "javascript: URI XSS",
+    "framework": "general",
+    "category": "user-input-and-injection",
+    "description": "Dynamic values are concatenated into a 'javascript:' URI scheme assigned to href or window.open. Clicking such a link executes arbitrary JavaScript in the page's context. Use event handlers instead.",
+    "tags": [
+      "dom",
+      "javascript-uri",
+      "xss",
+      "href"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-6531"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst action = getUserInput();\nel.href = `javascript:${action}`;\nwindow.open('javascript:' + action);"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst action = getUserInput();\nel.addEventListener('click', () => runSafeAction(action));"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "react-insecure-html-injection-taint",
+    "title": "React dangerouslySetInnerHTML XSS",
+    "framework": "react",
+    "category": "user-input-and-injection",
+    "description": "Untrusted user input flows into dangerouslySetInnerHTML or a ref's innerHTML, bypassing React's built-in escaping and allowing script injection. Sanitize with DOMPurify before rendering.",
+    "tags": [
+      "react",
+      "dangerouslySetInnerHTML",
+      "innerHTML",
+      "xss",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-25572"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nfunction Comment({ content }: { content: string }) {\n  return <div dangerouslySetInnerHTML={{ __html: content }} />;\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport DOMPurify from 'dompurify';\nfunction Comment({ content }: { content: string }) {\n  const clean = DOMPurify.sanitize(content);\n  return <div dangerouslySetInnerHTML={{ __html: clean }} />;\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-insecure-href-taint",
+    "title": "React href javascript: URI XSS",
+    "framework": "react",
+    "category": "user-input-and-injection",
+    "description": "Untrusted user data flows into an href attribute in a React component. A 'javascript:' URI will execute arbitrary JavaScript when clicked. Validate that the URL starts with 'https://', 'http://', or '/'.",
+    "tags": [
+      "react",
+      "href",
+      "xss",
+      "javascript-uri",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-6531"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nfunction ProfileLink() {\n  const url = useSearchParams().get('url');\n  return <a href={url}>Visit</a>;\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nfunction ProfileLink() {\n  const raw = useSearchParams().get('url') ?? '/';\n  const safe = raw.startsWith('/') || raw.startsWith('https://') ? raw : '/';\n  return <a href={safe}>Visit</a>;\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-next-searchparams-xss-taint",
+    "title": "Next.js searchParams dangerouslySetInnerHTML XSS",
+    "framework": "react",
+    "category": "user-input-and-injection",
+    "description": "URL parameters flow into dangerouslySetInnerHTML without sanitization in a Next.js page, causing XSS during SSR or on the client. Sanitize with DOMPurify before rendering.",
+    "tags": [
+      "nextjs",
+      "react",
+      "xss",
+      "searchParams",
+      "ssr",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-29927"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (Next.js App Router page)\nexport default function Page({ searchParams }: { searchParams: { q: string } }) {\n  return <div dangerouslySetInnerHTML={{ __html: searchParams.q }} />;\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport DOMPurify from 'dompurify';\nexport default function Page({ searchParams }: { searchParams: { q: string } }) {\n  const clean = DOMPurify.sanitize(searchParams.q ?? '');\n  return <div dangerouslySetInnerHTML={{ __html: clean }} />;\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "angular-insecure-elementref-bypass-taint",
+    "title": "Angular ElementRef innerHTML XSS",
+    "framework": "angular",
+    "category": "user-input-and-injection",
+    "description": "User input flows into ElementRef.nativeElement.innerHTML or Renderer2.setProperty('innerHTML'), bypassing Angular's DomSanitizer. Sanitize untrusted data with DOMPurify before DOM insertion.",
+    "tags": [
+      "angular",
+      "elementref",
+      "innerHTML",
+      "renderer2",
+      "xss",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-32635",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-66412"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\n@Component({ selector: 'app-preview', template: '<div #host></div>' })\nexport class PreviewComponent {\n  @ViewChild('host') host!: ElementRef;\n  constructor(private route: ActivatedRoute) {}\n  ngOnInit() {\n    const html = this.route.snapshot.queryParams['html'];\n    this.host.nativeElement.innerHTML = html;\n  }\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport DOMPurify from 'dompurify';\n@Component({ selector: 'app-preview', template: '<div #host></div>' })\nexport class PreviewComponent {\n  @ViewChild('host') host!: ElementRef;\n  constructor(private route: ActivatedRoute) {}\n  ngOnInit() {\n    const html = this.route.snapshot.queryParams['html'];\n    this.host.nativeElement.innerHTML = DOMPurify.sanitize(html);\n  }\n}"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "angular-insecure-bypass-security-taint",
+    "title": "Angular bypassSecurityTrust XSS",
+    "framework": "angular",
+    "category": "user-input-and-injection",
+    "description": "User input flows into DomSanitizer.bypassSecurityTrust*() methods which explicitly disable Angular's built-in XSS protection. Sanitize input with DOMPurify before bypassing the sanitizer.",
+    "tags": [
+      "angular",
+      "domsanitizer",
+      "bypassSecurityTrust",
+      "xss",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-22610",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-66412"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\n@Component({ template: '<div [innerHTML]=\"trustedHtml\"></div>' })\nexport class MyComponent {\n  trustedHtml: SafeHtml;\n  constructor(private san: DomSanitizer, private route: ActivatedRoute) {\n    const raw = this.route.snapshot.queryParams['content'];\n    this.trustedHtml = this.san.bypassSecurityTrustHtml(raw);\n  }\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport DOMPurify from 'dompurify';\n@Component({ template: '<div [innerHTML]=\"trustedHtml\"></div>' })\nexport class MyComponent {\n  trustedHtml: SafeHtml;\n  constructor(private san: DomSanitizer, private route: ActivatedRoute) {\n    const raw = this.route.snapshot.queryParams['content'];\n    this.trustedHtml = this.san.bypassSecurityTrustHtml(DOMPurify.sanitize(raw));\n  }\n}"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "angular-hostbinding-innerhtml",
+    "title": "Angular @HostBinding innerHTML XSS Risk",
+    "framework": "angular",
+    "category": "user-input-and-injection",
+    "description": "@HostBinding bound to innerHTML or outerHTML can introduce XSS if explicitly trusted HTML is passed to it. Verify that the bound property value is strictly controlled and never user-supplied.",
+    "tags": [
+      "angular",
+      "hostbinding",
+      "innerHTML",
+      "xss"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-66412"
+    ],
+    "bad_examples": [
+      "// ❌ risky\n@Directive({ selector: '[appRichText]' })\nexport class RichTextDirective {\n  @HostBinding('innerHTML')\n  content = '';\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe - sanitize before binding\nimport DOMPurify from 'dompurify';\n@Directive({ selector: '[appRichText]' })\nexport class RichTextDirective {\n  private _content = '';\n  @HostBinding('innerHTML') get content() { return this._content; }\n  set content(val: string) { this._content = DOMPurify.sanitize(val); }\n}"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "angular-safe-html-pipe-bypass",
+    "title": "Angular Pipe bypassSecurityTrustHtml XSS",
+    "framework": "angular",
+    "category": "user-input-and-injection",
+    "description": "A custom Pipe calls bypassSecurityTrustHtml() directly, creating a blanket sanitization bypass for any value piped through it. Use DomSanitizer.sanitize() or DOMPurify instead.",
+    "tags": [
+      "angular",
+      "pipe",
+      "bypassSecurityTrustHtml",
+      "xss"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-32635"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\n@Pipe({ name: 'safeHtml' })\nexport class SafeHtmlPipe implements PipeTransform {\n  constructor(private san: DomSanitizer) {}\n  transform(value: string): SafeHtml {\n    return this.san.bypassSecurityTrustHtml(value);\n  }\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport DOMPurify from 'dompurify';\n@Pipe({ name: 'safeHtml' })\nexport class SafeHtmlPipe implements PipeTransform {\n  constructor(private san: DomSanitizer) {}\n  transform(value: string): SafeHtml {\n    return this.san.bypassSecurityTrustHtml(DOMPurify.sanitize(value));\n  }\n}"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "angular-domsanitizer-sanitize-wrong-context-taint",
+    "title": "Angular DomSanitizer SecurityContext.NONE XSS",
+    "framework": "angular",
+    "category": "user-input-and-injection",
+    "description": "User input flows into DomSanitizer.sanitize() with SecurityContext.NONE (value 0), which performs no sanitization and returns the raw string. Use SecurityContext.HTML for HTML content.",
+    "tags": [
+      "angular",
+      "domsanitizer",
+      "securitycontext",
+      "xss",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-32635"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport { SecurityContext } from '@angular/core';\nconst raw = this.route.snapshot.queryParams['html'];\nconst result = this.sanitizer.sanitize(SecurityContext.NONE, raw);\n// SecurityContext.NONE === 0: no sanitization applied"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport { SecurityContext } from '@angular/core';\nconst raw = this.route.snapshot.queryParams['html'];\nconst result = this.sanitizer.sanitize(SecurityContext.HTML, raw);"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "vue-insecure-html-injection-taint",
+    "title": "Vue domProps.innerHTML XSS",
+    "framework": "vue",
+    "category": "user-input-and-injection",
+    "description": "Untrusted data flows into domProps.innerHTML or a template ref's innerHTML in a Vue component. Vue does not escape HTML inserted this way. Sanitize with DOMPurify before rendering.",
+    "tags": [
+      "vue",
+      "innerHTML",
+      "domProps",
+      "xss",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-6783"
+    ],
+    "bad_examples": [
+      "<!-- ❌ unsafe Vue SFC -->\n<script setup lang=\"ts\">\nimport { ref, onMounted } from 'vue';\nimport { useRoute } from 'vue-router';\nconst output = ref<HTMLElement>();\nonMounted(() => {\n  output.value!.innerHTML = useRoute().query.html as string;\n});\n</script>\n<template><div ref=\"output\"></div></template>"
+    ],
+    "good_examples": [
+      "<!-- ✅ safe -->\n<script setup lang=\"ts\">\nimport { ref, onMounted } from 'vue';\nimport { useRoute } from 'vue-router';\nimport DOMPurify from 'dompurify';\nconst output = ref<HTMLElement>();\nonMounted(() => {\n  output.value!.innerHTML = DOMPurify.sanitize(useRoute().query.html as string);\n});\n</script>\n<template><div ref=\"output\"></div></template>"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "vue-nuxt-usehead-xss-taint",
+    "title": "Nuxt useHead XSS via SSR Head Injection",
+    "framework": "vue",
+    "category": "user-input-and-injection",
+    "description": "User input flows into useHead() or useHeadSafe() composables, injecting HTML into SSR-rendered <head> tags via script.innerHTML, meta content, or link href. Strictly validate and encode all user-controlled values.",
+    "tags": [
+      "nuxt",
+      "vue",
+      "useHead",
+      "xss",
+      "ssr",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-52662",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-31860"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (Nuxt composable)\nexport default defineEventHandler((event) => {\n  const title = getQuery(event).title as string;\n  useHead({ title }); // user-controlled value in SSR <head>\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe - encode and limit length\nexport default defineEventHandler((event) => {\n  const raw = String(getQuery(event).title ?? '').slice(0, 200);\n  const title = raw.replace(/[<>\"'&]/g, '');\n  useHead({ title });\n});"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "vue-insecure-javascript-url",
+    "title": "Vue v-bind:href javascript: URI XSS",
+    "framework": "vue",
+    "category": "user-input-and-injection",
+    "description": "Dynamic binding of a 'javascript:' URI to href in a Vue template allows Cross-Site Scripting. Use Vue event handlers (e.g., @click) instead of javascript URIs.",
+    "tags": [
+      "vue",
+      "href",
+      "javascript-uri",
+      "xss",
+      "v-bind"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-34343"
+    ],
+    "bad_examples": [
+      "<!-- ❌ unsafe Vue template -->\n<template>\n  <a :href=\"'javascript:' + userAction\">Click me</a>\n</template>"
+    ],
+    "good_examples": [
+      "<!-- ✅ safe -->\n<template>\n  <button @click=\"handleAction(userAction)\">Click me</button>\n</template>"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "svelte-insecure-html-injection-route",
+    "title": "Svelte {@html} from URL/Location XSS",
+    "framework": "svelte",
+    "category": "user-input-and-injection",
+    "description": "URL or location data flows directly into '{@html}', bypassing Svelte's auto-escaping. All data rendered via {@html} must be sanitized before use.",
+    "tags": [
+      "svelte",
+      "html-tag",
+      "xss",
+      "url",
+      "router"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-27901"
+    ],
+    "bad_examples": [
+      "<!-- ❌ unsafe Svelte component -->\n<script>\n  import { page } from '$app/stores';\n</script>\n{@html $page.url.searchParams.get('content')}"
+    ],
+    "good_examples": [
+      "<!-- ✅ safe -->\n<script>\n  import { page } from '$app/stores';\n  import DOMPurify from 'dompurify';\n  $: safeContent = DOMPurify.sanitize($page.url.searchParams.get('content') ?? '');\n</script>\n{@html safeContent}"
+    ],
+    "lang": "html"
+  },
+  {
+    "id": "svelte-sveltekit-load-taint-xss",
+    "title": "SvelteKit load() HTML Key XSS",
+    "framework": "svelte",
+    "category": "user-input-and-injection",
+    "description": "Untrusted data from cookies, URL params, or request headers is returned unsanitized from a load() function under an HTML-like key. If rendered via {@html} in the template, this leads to XSS. Sanitize values before returning from load().",
+    "tags": [
+      "sveltekit",
+      "svelte",
+      "load",
+      "xss",
+      "ssr",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-32388"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe +page.server.ts\nexport async function load({ url }) {\n  const rawHtml = url.searchParams.get('content');\n  return { html: rawHtml }; // rendered with {@html html} → XSS\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport DOMPurify from 'dompurify';\nexport async function load({ url }) {\n  const raw = url.searchParams.get('content') ?? '';\n  return { html: DOMPurify.sanitize(raw) };\n}"
+    ],
+    "lang": "svelte"
+  },
+  {
+    "id": "dom-insecure-code-execution-eval-taint",
+    "title": "eval() / new Function() Code Injection",
+    "framework": "general",
+    "category": "rendering-and-dom",
+    "description": "Untrusted user input flows into eval(), new Function(), or string-based setTimeout()/setInterval(), allowing arbitrary JavaScript execution. Use safer alternatives that do not execute strings as code.",
+    "tags": [
+      "dom",
+      "eval",
+      "new-function",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-1470"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst expr = new URLSearchParams(window.location.search).get('expr');\nconst result = eval(expr);\nsetTimeout(expr, 1000); // also unsafe"
+    ],
+    "good_examples": [
+      "// ✅ safe - parse as a number, not as code\nconst raw = new URLSearchParams(window.location.search).get('value');\nconst value = Number(raw);\nif (!Number.isFinite(value)) throw new Error('Invalid value');"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-document-domain-assignment",
+    "title": "document.domain Weakens Same-Origin Policy",
+    "framework": "general",
+    "category": "rendering-and-dom",
+    "description": "Assigning to document.domain relaxes the Same-Origin Policy and allows cross-subdomain DOM access. Use postMessage for cross-origin communication instead.",
+    "tags": [
+      "dom",
+      "document.domain",
+      "same-origin-policy",
+      "sop"
+    ],
+    "references": [
+      "https://developer.chrome.com/blog/document-domain-setter-deprecation"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\ndocument.domain = 'example.com';\n// Now any subdomain can access this frame's DOM"
+    ],
+    "good_examples": [
+      "// ✅ safe - use postMessage for cross-frame communication\nwindow.parent.postMessage({ type: 'data', payload }, 'https://example.com');"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-location-hash-script-injection-taint",
+    "title": "location.hash to Script/iframe src Injection",
+    "framework": "general",
+    "category": "rendering-and-dom",
+    "description": "location.hash flows into a script src, iframe src, or link href. Hash fragments are fully attacker-controlled and invisible to server-side defenses. Validate against a strict allowlist before using hash values for resource loading.",
+    "tags": [
+      "dom",
+      "location.hash",
+      "script-injection",
+      "iframe",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-26269"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst src = location.hash.slice(1);\nconst script = document.createElement('script');\nscript.src = src;\ndocument.head.appendChild(script);"
+    ],
+    "good_examples": [
+      "// ✅ safe - allowlist\nconst ALLOWED = ['/scripts/app.js', '/scripts/widget.js'];\nconst src = location.hash.slice(1);\nif (ALLOWED.includes(src)) {\n  const script = document.createElement('script');\n  script.src = src;\n  document.head.appendChild(script);\n}"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-service-worker-user-url-taint",
+    "title": "Service Worker Hijacking via User-Controlled URL",
+    "framework": "general",
+    "category": "rendering-and-dom",
+    "description": "Untrusted data flows into serviceWorker.register() as the scriptURL. A compromised service worker intercepts all network requests and persists across reloads. Hardcode the service worker URL or validate against an allowlist.",
+    "tags": [
+      "dom",
+      "service-worker",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-5480"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst swUrl = new URLSearchParams(window.location.search).get('sw');\nnavigator.serviceWorker.register(swUrl);"
+    ],
+    "good_examples": [
+      "// ✅ safe - hardcoded URL\nnavigator.serviceWorker.register('/sw.js');"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-importscripts-user-url-taint",
+    "title": "importScripts() Code Execution in Web Worker",
+    "framework": "general",
+    "category": "rendering-and-dom",
+    "description": "Untrusted data flows into importScripts() inside a Web Worker. importScripts() fetches and executes scripts synchronously, potentially bypassing CSP. Hardcode script URLs or validate against a strict allowlist.",
+    "tags": [
+      "dom",
+      "importscripts",
+      "web-worker",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-22020"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (inside a Worker)\nself.addEventListener('message', (e) => {\n  importScripts(e.data.scriptUrl);\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst ALLOWED = ['/workers/math.js', '/workers/sort.js'];\nself.addEventListener('message', (e) => {\n  if (ALLOWED.includes(e.data.scriptUrl)) importScripts(e.data.scriptUrl);\n});"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-execcommand-inserthtml-taint",
+    "title": "document.execCommand insertHTML XSS",
+    "framework": "general",
+    "category": "rendering-and-dom",
+    "description": "Untrusted data flows into document.execCommand('insertHTML' or 'createLink'), injecting HTML into a contenteditable element and potentially bypassing Trusted Types. Sanitize input with DOMPurify before calling these commands.",
+    "tags": [
+      "dom",
+      "execcommand",
+      "contenteditable",
+      "xss",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-53847"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst html = new URLSearchParams(window.location.search).get('text');\ndocument.execCommand('insertHTML', false, html);"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport DOMPurify from 'dompurify';\nconst raw = new URLSearchParams(window.location.search).get('text') ?? '';\ndocument.execCommand('insertHTML', false, DOMPurify.sanitize(raw));"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "react-next-server-action-missing-auth",
+    "title": "Next.js Server Action Missing Auth Check",
+    "framework": "react",
+    "category": "rendering-and-dom",
+    "description": "A Next.js Server Action performs database operations without an authentication or session check. Attackers can invoke this endpoint directly to bypass UI restrictions. Add auth/session validation before any DB operations.",
+    "tags": [
+      "nextjs",
+      "react",
+      "server-action",
+      "access-control",
+      "authentication"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-29927",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-51479"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - no auth check\n'use server';\nimport { prisma } from '@/lib/db';\nexport async function deleteUser(id: string) {\n  await prisma.user.delete({ where: { id } });\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\n'use server';\nimport { auth } from '@/lib/auth';\nimport { prisma } from '@/lib/db';\nexport async function deleteUser(id: string) {\n  const session = await auth();\n  if (!session?.user?.isAdmin) throw new Error('Unauthorized');\n  await prisma.user.delete({ where: { id } });\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-next-image-unvalidated-src-taint",
+    "title": "Next.js <Image> SSRF via Unvalidated src",
+    "framework": "react",
+    "category": "rendering-and-dom",
+    "description": "Untrusted user input flows into the Next.js <Image> src attribute. Next.js proxies images through /_next/image, so a user-controlled URL enables server-side requests to arbitrary internal or external hosts. Validate src against an allowlist of permitted domains.",
+    "tags": [
+      "nextjs",
+      "react",
+      "ssrf",
+      "image",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-34351",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-57822"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nexport default function Avatar({ searchParams }: { searchParams: { img: string } }) {\n  return <Image src={searchParams.img} alt=\"avatar\" width={64} height={64} />;\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe - validate hostname at runtime + configure remotePatterns in next.config\nconst ALLOWED_HOSTS = ['cdn.example.com', 'avatars.githubusercontent.com'];\nexport default function Avatar({ searchParams }: { searchParams: { img: string } }) {\n  const url = new URL(searchParams.img);\n  if (!ALLOWED_HOSTS.includes(url.hostname)) return null;\n  return <Image src={searchParams.img} alt=\"avatar\" width={64} height={64} />;\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-next-script-user-src-taint",
+    "title": "Next.js <Script> src Injection",
+    "framework": "react",
+    "category": "rendering-and-dom",
+    "description": "Untrusted user input flows into the Next.js <Script> src attribute, equivalent to injecting an arbitrary <script src> tag. Hardcode the script URL or validate against an allowlist of trusted domains.",
+    "tags": [
+      "nextjs",
+      "react",
+      "script-injection",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nexport default function Page({ searchParams }: { searchParams: { src: string } }) {\n  return <Script src={searchParams.src} />;\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe - hardcode the script URL\nexport default function Page() {\n  return <Script src=\"https://cdn.example.com/analytics.js\" />;\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-dynamic-import-user-path-taint",
+    "title": "Dynamic import() with User-Controlled Path",
+    "framework": "react",
+    "category": "rendering-and-dom",
+    "description": "Untrusted user input flows into a dynamic import() path. In SSR contexts this enables Remote Code Execution via arbitrary module loading. Never use user-controlled values as module paths; use an explicit allowlist map.",
+    "tags": [
+      "react",
+      "nextjs",
+      "dynamic-import",
+      "rce",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-55182"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst view = searchParams.get('view');\nconst Module = await import(view); // RCE in SSR\nconst mod = await import(`./components/${view}`);"
+    ],
+    "good_examples": [
+      "// ✅ safe - explicit allowlist map\nconst MODULES: Record<string, () => Promise<unknown>> = {\n  dashboard: () => import('./Dashboard'),\n  profile: () => import('./Profile'),\n};\nconst loader = MODULES[searchParams.get('view') ?? ''];\nif (!loader) throw new Error('Unknown view');\nconst Module = await loader();"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "angular-sce-trust-bypass-taint",
+    "title": "AngularJS $sce.trustAsHtml / $compile Injection",
+    "framework": "angular",
+    "category": "rendering-and-dom",
+    "description": "User input flows into $sce.trustAsHtml(), $sce.trustAs(), or $compile(), disabling AngularJS Strict Contextual Escaping. Use $sanitize or migrate away from AngularJS (EOL December 2021).",
+    "tags": [
+      "angularjs",
+      "angular",
+      "sce",
+      "compile",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-2336",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-0716"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (AngularJS)\napp.controller('MyCtrl', function($scope, $sce, $location) {\n  $scope.html = $sce.trustAsHtml($location.search().content);\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe\napp.controller('MyCtrl', function($scope, $sce, $sanitize, $location) {\n  $scope.html = $sce.trustAsHtml($sanitize($location.search().content));\n});"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "angular-jit-compilation-user-template",
+    "title": "Angular JIT Runtime Template Compilation",
+    "framework": "angular",
+    "category": "rendering-and-dom",
+    "description": "Dynamic Angular JIT template compilation is detected with a non-literal template string. The JIT compiler uses the Function constructor internally, so user-controlled template strings enable arbitrary code execution. Use AOT compilation and avoid runtime template compilation.",
+    "tags": [
+      "angular",
+      "jit",
+      "template-injection",
+      "code-execution"
+    ],
+    "references": [
+      "https://portswigger.net/research/server-side-template-injection"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst template = buildTemplateFromUserInput(userInput);\n@Component({ template })\nexport class DynamicComponent {}"
+    ],
+    "good_examples": [
+      "// ✅ safe - static literal template, AOT-compiled\n@Component({\n  template: `<div>{{ safeValue }}</div>`\n})\nexport class SafeComponent {\n  safeValue = sanitize(userInput);\n}"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "vue-insecure-dynamic-component-route",
+    "title": "Vue <component :is> Router Injection",
+    "framework": "vue",
+    "category": "rendering-and-dom",
+    "description": "Router data flows directly into <component :is=\"...\">, allowing an attacker to manipulate the URL to render arbitrary global components. Validate the component name against an explicit allowlist.",
+    "tags": [
+      "vue",
+      "dynamic-component",
+      "router",
+      "code-execution"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-34343"
+    ],
+    "bad_examples": [
+      "<!-- ❌ unsafe Vue template -->\n<template>\n  <component :is=\"$route.query.view\" />\n</template>"
+    ],
+    "good_examples": [
+      "<!-- ✅ safe -->\n<script setup lang=\"ts\">\nimport { useRoute } from 'vue-router';\nimport Dashboard from './Dashboard.vue';\nimport Profile from './Profile.vue';\nconst ALLOWED: Record<string, unknown> = { dashboard: Dashboard, profile: Profile };\nconst comp = ALLOWED[useRoute().query.view as string] ?? Dashboard;\n</script>\n<template><component :is=\"comp\" /></template>"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "vue-mount-user-template-taint",
+    "title": "Vue Runtime Template Compilation CSTI",
+    "framework": "vue",
+    "category": "rendering-and-dom",
+    "description": "Untrusted user input flows into Vue's runtime template compilation via new Vue({ template }), createApp({ template }), or $app.mount(). The Vue compiler uses Function() internally, making user-controlled template strings equivalent to eval().",
+    "tags": [
+      "vue",
+      "template-injection",
+      "csti",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-6783"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst userTemplate = this.$route.query.template as string;\ncreateApp({ template: userTemplate }).mount('#app');"
+    ],
+    "good_examples": [
+      "// ✅ safe - use v-html with DOMPurify for dynamic HTML\ncreateApp({\n  template: `<div v-html=\"cleanHtml\"></div>`,\n  data() { return { cleanHtml: DOMPurify.sanitize(userInput) }; }\n}).mount('#app');"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "vue-compile-user-template",
+    "title": "Vue.compile() with Non-Literal Template",
+    "framework": "vue",
+    "category": "rendering-and-dom",
+    "description": "Vue.compile() or Vue.extend() is called with a non-literal template string. The Vue compiler uses Function() internally, so user-controlled template expressions execute arbitrary JavaScript. Use only static developer-defined template strings.",
+    "tags": [
+      "vue",
+      "compile",
+      "template-injection",
+      "code-execution"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-6783"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst tmpl = getTemplateFromServer();\nconst Component = Vue.compile(tmpl);\n// {{ constructor.constructor('alert(1)')() }}"
+    ],
+    "good_examples": [
+      "// ✅ safe - compile only static literals\nconst Component = Vue.compile('<div>{{ message }}</div>');"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "svelte-sveltekit-handle-hook-html-taint",
+    "title": "SvelteKit handle() Hook HTML Response XSS",
+    "framework": "svelte",
+    "category": "rendering-and-dom",
+    "description": "Request data flows into an HTML Response from the SvelteKit handle() hook without HTML encoding, allowing XSS via URL fragments or headers. HTML-encode all user-controlled values before embedding in server responses.",
+    "tags": [
+      "sveltekit",
+      "svelte",
+      "handle-hook",
+      "xss",
+      "ssr",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-27901",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-53261"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (hooks.server.ts)\nexport async function handle({ event, resolve }) {\n  const path = event.url.pathname;\n  return new Response(`<h1>Error: ${path}</h1>`, {\n    headers: { 'content-type': 'text/html' }\n  });\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst escape = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');\nexport async function handle({ event, resolve }) {\n  const path = event.url.pathname;\n  return new Response(`<h1>Error: ${escape(path)}</h1>`, {\n    headers: { 'content-type': 'text/html' }\n  });\n}"
+    ],
+    "lang": "svelte"
+  },
+  {
+    "id": "dom-localstorage-sensitive-data",
+    "title": "Sensitive Data in localStorage/sessionStorage",
+    "framework": "general",
+    "category": "state-and-data-handling",
+    "description": "Sensitive data such as auth tokens, JWTs, or credentials is stored in localStorage or sessionStorage. Both are accessible via JavaScript and can be exfiltrated by any XSS payload. Store auth tokens in HttpOnly cookies instead.",
+    "tags": [
+      "dom",
+      "localstorage",
+      "sensitive-data",
+      "token",
+      "xss"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nlocalStorage.setItem('auth_token', response.token);\nlocalStorage.setItem('jwt', token);"
+    ],
+    "good_examples": [
+      "// ✅ safe - use HttpOnly cookies (set server-side)\n// Server: Set-Cookie: session=<token>; HttpOnly; Secure; SameSite=Strict\n// Non-sensitive state only in localStorage:\nlocalStorage.setItem('theme', 'dark');"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-client-side-env-secret-exposure",
+    "title": "Client-Side Secret in Public Env Variable",
+    "framework": "general",
+    "category": "state-and-data-handling",
+    "description": "A client-side environment variable with a sensitive name is referenced. Variables prefixed with NEXT_PUBLIC_, VITE_, or REACT_APP_ are inlined into the production JavaScript bundle and visible to all users. Move secrets to server-side environment variables.",
+    "tags": [
+      "dom",
+      "env-variable",
+      "secret",
+      "bundle",
+      "sensitive-data"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - VITE_ prefix exposes this in the client bundle\nconst apiKey = import.meta.env.VITE_STRIPE_SECRET;\nconst secret = process.env.NEXT_PUBLIC_API_KEY;"
+    ],
+    "good_examples": [
+      "// ✅ safe - server-side only, no public prefix\n// In an API route / server function:\nconst apiKey = process.env.STRIPE_SECRET;\n// Only public config exposed to client:\nconst pubKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "react-hooks-missing-deps",
+    "title": "React Hook Missing Dependency Array",
+    "framework": "react",
+    "category": "state-and-data-handling",
+    "description": "React hook (useEffect, useCallback, useMemo) is called without a dependency array, causing the hook to run on every render, leading to performance degradation or infinite loops.",
+    "tags": [
+      "react",
+      "hooks",
+      "useEffect",
+      "useCallback",
+      "useMemo",
+      "logic"
+    ],
+    "references": [
+      "https://react.dev/reference/rules/rules-of-hooks"
+    ],
+    "bad_examples": [
+      "// ❌ runs on every render\nuseEffect(() => {\n  fetchData(userId);\n}); // no dependency array\n\nuseCallback(() => handleClick(id), undefined);"
+    ],
+    "good_examples": [
+      "// ✅ runs only when userId changes\nuseEffect(() => {\n  fetchData(userId);\n}, [userId]);\n\nconst cb = useCallback(() => onClick(id), [id, onClick]);"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-next-data-overfetching-leak-taint",
+    "title": "Next.js getServerSideProps Raw ORM Object Leak",
+    "framework": "react",
+    "category": "state-and-data-handling",
+    "description": "Raw ORM objects returned from getServerSideProps or getStaticProps can expose sensitive hidden fields (passwords, tokens) in the client HTML payload. Map the object to a safe DTO before returning.",
+    "tags": [
+      "nextjs",
+      "react",
+      "sensitive-data",
+      "orm",
+      "data-leak",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-46982"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - exposes passwordHash, apiKey, etc.\nexport async function getServerSideProps() {\n  const user = await prisma.user.findUnique({ where: { id: 1 } });\n  return { props: user };\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe - select only needed fields\nexport async function getServerSideProps() {\n  const user = await prisma.user.findUnique({\n    where: { id: 1 },\n    select: { id: true, name: true, email: true }\n  });\n  return { props: user };\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-redux-persist-no-blacklist",
+    "title": "redux-persist Without Blacklist Persists Secrets",
+    "framework": "react",
+    "category": "state-and-data-handling",
+    "description": "redux-persist is configured without a blacklist. The entire Redux state tree is written to localStorage as plaintext JSON, exposing auth tokens and user data to XSS payloads. Add a blacklist for sensitive reducers.",
+    "tags": [
+      "react",
+      "redux",
+      "persist",
+      "sensitive-data",
+      "localstorage"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - entire state including auth slice persisted\nconst persistConfig = { key: 'root', storage };\nexport const store = configureStore({\n  reducer: persistReducer(persistConfig, rootReducer)\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst persistConfig = {\n  key: 'root',\n  storage,\n  blacklist: ['auth'] // auth never written to localStorage\n};"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-zustand-persist-sensitive-state",
+    "title": "Zustand persist Middleware Exposes Sensitive State",
+    "framework": "react",
+    "category": "state-and-data-handling",
+    "description": "Zustand store with persist middleware contains sensitive state fields. The middleware defaults to localStorage, exposing auth data to XSS payloads. Use the partialize option to exclude sensitive fields.",
+    "tags": [
+      "react",
+      "zustand",
+      "persist",
+      "sensitive-data",
+      "localstorage"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - token written to localStorage\nexport const useStore = create(persist(\n  (set) => ({ token: '', username: '', theme: 'dark' }),\n  { name: 'app-store' }\n));"
+    ],
+    "good_examples": [
+      "// ✅ safe - exclude sensitive fields\nexport const useStore = create(persist(\n  (set) => ({ token: '', username: '', theme: 'dark' }),\n  {\n    name: 'app-store',\n    partialize: (s) => ({ theme: s.theme, username: s.username })\n  }\n));"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-redux-devtools-production",
+    "title": "Redux DevTools Enabled in Production",
+    "framework": "react",
+    "category": "state-and-data-handling",
+    "description": "Redux DevTools are enabled without an environment guard. In production, users with the DevTools extension can inspect the entire Redux state tree including auth tokens and secrets. Wrap with a NODE_ENV === 'development' check.",
+    "tags": [
+      "react",
+      "redux",
+      "devtools",
+      "sensitive-data",
+      "production"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - DevTools exposed in production\nimport { composeWithDevTools } from 'redux-devtools-extension';\nconst store = createStore(reducer, composeWithDevTools(applyMiddleware(thunk)));"
+    ],
+    "good_examples": [
+      "// ✅ safe - guard with NODE_ENV\nconst composeEnhancers =\n  process.env.NODE_ENV === 'development'\n    ? (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ ?? compose\n    : compose;\nconst store = createStore(reducer, composeEnhancers(applyMiddleware(thunk)));"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-query-dehydrate-sensitive-cache",
+    "title": "React Query dehydrate() Leaks DB Data to HTML",
+    "framework": "react",
+    "category": "state-and-data-handling",
+    "description": "A raw DB result flows into dehydrate(queryClient), serializing the query cache into the HTML payload. Sensitive fields become visible in page source. Prefetch only public data or filter fields before caching.",
+    "tags": [
+      "nextjs",
+      "react",
+      "react-query",
+      "ssr",
+      "data-leak",
+      "sensitive-data",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-46982"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - full user objects including secrets in HTML\nexport async function getServerSideProps() {\n  const qc = new QueryClient();\n  await qc.prefetchQuery(['users'], () => prisma.user.findMany());\n  return { props: { dehydratedState: dehydrate(qc) } };\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe - select only public fields\nexport async function getServerSideProps() {\n  const qc = new QueryClient();\n  await qc.prefetchQuery(['users'], () =>\n    prisma.user.findMany({ select: { id: true, name: true } })\n  );\n  return { props: { dehydratedState: dehydrate(qc) } };\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "angular-nested-subscribe",
+    "title": "Angular Nested subscribe() Memory Leak",
+    "framework": "angular",
+    "category": "state-and-data-handling",
+    "description": "Nested subscribe() calls detected inside Angular components, leading to callback hell, race conditions, and memory leaks. Refactor using RxJS operators (switchMap, mergeMap).",
+    "tags": [
+      "angular",
+      "rxjs",
+      "subscribe",
+      "memory-leak",
+      "logic"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Memory_Management_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ memory leak - inner subscription never unsubscribed\nthis.route.params.subscribe((params) => {\n  this.userService.getUser(params['id']).subscribe((user) => {\n    this.user = user;\n  });\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe - switchMap unsubscribes from previous inner observable\nthis.route.params.pipe(\n  switchMap((params) => this.userService.getUser(params['id']))\n).subscribe((user) => { this.user = user; });"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "angular-sharereplay-no-refcount",
+    "title": "Angular shareReplay() Without refCount Memory Leak",
+    "framework": "angular",
+    "category": "state-and-data-handling",
+    "description": "shareReplay() is used without {refCount: true}, causing the operator to never unsubscribe from the source. This retains sensitive API responses in memory after component destruction. Use shareReplay({ bufferSize: 1, refCount: true }) instead.",
+    "tags": [
+      "angular",
+      "rxjs",
+      "shareReplay",
+      "memory-leak",
+      "logic"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Memory_Management_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ never unsubscribes from the source\nconst user$ = this.http.get<User>('/api/me').pipe(\n  shareReplay(1)\n);"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst user$ = this.http.get<User>('/api/me').pipe(\n  shareReplay({ bufferSize: 1, refCount: true })\n);"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "vue-pinia-persist-sensitive-state",
+    "title": "Pinia pinia-plugin-persistedstate Persists Secrets",
+    "framework": "vue",
+    "category": "state-and-data-handling",
+    "description": "Pinia store uses pinia-plugin-persistedstate with persist:true and contains sensitive state fields. The plugin writes entire store state to localStorage. Use the pick option to include only non-sensitive fields.",
+    "tags": [
+      "vue",
+      "pinia",
+      "persist",
+      "sensitive-data",
+      "localstorage"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - token persisted to localStorage\nexport const useAuthStore = defineStore('auth', {\n  state: () => ({ token: '', userId: '', theme: 'dark' }),\n  persist: true,\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe - persist only non-sensitive fields\nexport const useAuthStore = defineStore('auth', {\n  state: () => ({ token: '', userId: '', theme: 'dark' }),\n  persist: { pick: ['theme'] },\n});"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "vue-nuxt-ssr-state-singleton",
+    "title": "Nuxt Vuex State Object Singleton Leaks Across Requests",
+    "framework": "vue",
+    "category": "state-and-data-handling",
+    "description": "Vuex state is defined as a plain object instead of a factory function. In SSR (Nuxt), this creates a singleton shared across all requests, leaking one user's data into another's response. Define state as a function: state: () => ({ ... }).",
+    "tags": [
+      "nuxt",
+      "vue",
+      "vuex",
+      "ssr",
+      "data-leak",
+      "sensitive-data"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-27415"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - singleton state in SSR\nexport default {\n  state: { user: null, token: '' },\n  mutations: { setUser(state, user) { state.user = user; } }\n};"
+    ],
+    "good_examples": [
+      "// ✅ safe - factory function\nexport default {\n  state: () => ({ user: null, token: '' }),\n  mutations: { setUser(state, user) { state.user = user; } }\n};"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "svelte-store-mutation-in-subscribe",
+    "title": "Svelte Store Mutation Inside subscribe() Infinite Loop",
+    "framework": "svelte",
+    "category": "state-and-data-handling",
+    "description": "Mutating a Svelte store inside its own .subscribe() callback is an anti-pattern that triggers infinite loops. Use derived stores instead.",
+    "tags": [
+      "svelte",
+      "store",
+      "subscribe",
+      "infinite-loop",
+      "logic"
+    ],
+    "references": [
+      "https://svelte.dev/docs/svelte/runtime-errors"
+    ],
+    "bad_examples": [
+      "// ❌ infinite loop\nimport { count, doubled } from './stores';\ncount.subscribe((val) => {\n  doubled.set(val * 2); // triggers count subscribers again\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe - derived store\nimport { derived } from 'svelte/store';\nimport { count } from './stores';\nexport const doubled = derived(count, ($count) => $count * 2);"
+    ],
+    "lang": "svelte"
+  },
+  {
+    "id": "svelte-sveltekit-cookie-insecure-samesite",
+    "title": "SvelteKit Cookie sameSite:'none' CSRF Risk",
+    "framework": "svelte",
+    "category": "state-and-data-handling",
+    "description": "cookies.set() is called with sameSite:'none', disabling SameSite CSRF protection. Use sameSite:'lax' (default) or sameSite:'strict' for authentication cookies.",
+    "tags": [
+      "sveltekit",
+      "svelte",
+      "cookie",
+      "csrf",
+      "sensitive-data"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-29008",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-29003"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\ncookies.set('session', token, {\n  httpOnly: true, secure: true,\n  sameSite: 'none' // CSRF protection disabled\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe\ncookies.set('session', token, {\n  httpOnly: true, secure: true,\n  sameSite: 'lax', path: '/'\n});"
+    ],
+    "lang": "svelte"
+  },
+  {
+    "id": "svelte-sveltekit-cookie-missing-httponly",
+    "title": "SvelteKit Cookie httpOnly:false Enables XSS Theft",
+    "framework": "svelte",
+    "category": "state-and-data-handling",
+    "description": "cookies.set() is called with httpOnly:false, allowing JavaScript access to the cookie and enabling theft via XSS. Remove httpOnly:false or set httpOnly:true explicitly.",
+    "tags": [
+      "sveltekit",
+      "svelte",
+      "cookie",
+      "httponly",
+      "sensitive-data"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - accessible via document.cookie\ncookies.set('session', token, {\n  httpOnly: false, secure: true, sameSite: 'lax'\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe\ncookies.set('session', token, {\n  httpOnly: true, secure: true, sameSite: 'lax', path: '/'\n});"
+    ],
+    "lang": "svelte"
+  },
+  {
+    "id": "svelte-sveltekit-cookie-missing-secure",
+    "title": "SvelteKit Cookie secure:false Allows HTTP Transmission",
+    "framework": "svelte",
+    "category": "state-and-data-handling",
+    "description": "cookies.set() is called with secure:false, allowing the cookie to be transmitted over unencrypted HTTP and enabling interception. Use secure:true to restrict transmission to HTTPS only.",
+    "tags": [
+      "sveltekit",
+      "svelte",
+      "cookie",
+      "secure",
+      "sensitive-data"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - sent over plain HTTP\ncookies.set('session', token, {\n  httpOnly: true, secure: false, sameSite: 'lax'\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe\ncookies.set('session', token, {\n  httpOnly: true, secure: true, sameSite: 'lax', path: '/'\n});"
+    ],
+    "lang": "svelte"
+  },
+  {
+    "id": "dom-open-redirect-taint",
+    "title": "DOM Open Redirect via window.location",
+    "framework": "general",
+    "category": "routing-and-access-control",
+    "description": "Untrusted user input controls page navigation via window.location or history.pushState. An attacker can redirect victims to a malicious site. Validate the URL is a relative path or matches an explicit allowlist.",
+    "tags": [
+      "dom",
+      "open-redirect",
+      "window.location",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-29041"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst redirect = new URLSearchParams(window.location.search).get('next');\nwindow.location.href = redirect;"
+    ],
+    "good_examples": [
+      "// ✅ safe - allow only relative paths\nconst redirect = new URLSearchParams(window.location.search).get('next') ?? '/';\nif (redirect.startsWith('/') && !redirect.startsWith('//')) {\n  window.location.href = redirect;\n}"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-ssr-host-header-ssrf-taint",
+    "title": "Host Header SSRF in Server-Side Code",
+    "framework": "general",
+    "category": "routing-and-access-control",
+    "description": "The HTTP Host or X-Forwarded-Host header is used to construct backend requests. Attackers can spoof this header to route server-side traffic to internal hosts. Hardcode the API domain instead of trusting request headers.",
+    "tags": [
+      "dom",
+      "ssrf",
+      "host-header",
+      "server-side",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-34351"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\napp.get('/proxy', async (req, res) => {\n  const host = req.headers['x-forwarded-host'] || req.headers.host;\n  const data = await fetch(`https://${host}/internal/data`);\n  res.json(await data.json());\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe - hardcoded trusted host\nconst API_HOST = 'api.example.com';\napp.get('/proxy', async (req, res) => {\n  const data = await fetch(`https://${API_HOST}/internal/data`);\n  res.json(await data.json());\n});"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-redirect-param-taint",
+    "title": "Open Redirect via ?redirect= Parameter",
+    "framework": "general",
+    "category": "routing-and-access-control",
+    "description": "A redirect-related URL parameter (?next=, ?redirect=, ?url=, etc.) flows into a navigation function without validation. Validate the value is a relative path or matches an allowlist.",
+    "tags": [
+      "dom",
+      "open-redirect",
+      "query-param",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-29041"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst url = new URLSearchParams(window.location.search).get('redirect');\nwindow.location.assign(url);"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst url = new URLSearchParams(window.location.search).get('redirect') ?? '/';\nconst parsed = new URL(url, window.location.origin);\nif (parsed.origin === window.location.origin) {\n  window.location.assign(parsed.pathname + parsed.search);\n}"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "react-next-redirect-user-url-taint",
+    "title": "Next.js redirect() Open Redirect",
+    "framework": "react",
+    "category": "routing-and-access-control",
+    "description": "Untrusted user input flows into Next.js redirect() or permanentRedirect(), which emit HTTP 307/308 responses controlling the redirect destination. Validate against a relative-path constraint or domain allowlist.",
+    "tags": [
+      "nextjs",
+      "react",
+      "open-redirect",
+      "server-side",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport { redirect } from 'next/navigation';\nexport default function Page({ searchParams }: { searchParams: { next: string } }) {\n  redirect(searchParams.next);\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport { redirect } from 'next/navigation';\nexport default function Page({ searchParams }: { searchParams: { next: string } }) {\n  const next = searchParams.next ?? '/';\n  if (!next.startsWith('/') || next.startsWith('//')) redirect('/');\n  else redirect(next);\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "react-next-response-redirect-taint",
+    "title": "Next.js NextResponse.redirect Open Redirect in Middleware",
+    "framework": "react",
+    "category": "routing-and-access-control",
+    "description": "Untrusted user input flows into NextResponse.redirect() in Next.js middleware. A user-controlled redirect URL enables phishing and SSRF chain attacks. Validate the URL origin and protocol before redirecting.",
+    "tags": [
+      "nextjs",
+      "react",
+      "open-redirect",
+      "middleware",
+      "ssrf",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-57822"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (middleware.ts)\nimport { NextResponse } from 'next/server';\nexport function middleware(req: Request) {\n  const next = req.nextUrl.searchParams.get('next');\n  return NextResponse.redirect(next);\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport { NextResponse } from 'next/server';\nexport function middleware(req: Request) {\n  const next = req.nextUrl.searchParams.get('next') ?? '/';\n  const url = new URL(next, req.nextUrl.origin);\n  if (url.origin !== req.nextUrl.origin) return NextResponse.redirect(new URL('/', req.url));\n  return NextResponse.redirect(url);\n}"
+    ],
+    "lang": "tsx"
+  },
+  {
+    "id": "angular-router-redirect-taint",
+    "title": "Angular Router navigateByUrl Open Redirect",
+    "framework": "angular",
+    "category": "routing-and-access-control",
+    "description": "Untrusted data flows into Angular navigateByUrl() or navigate(). An attacker can redirect users to an external malicious site. Validate the target against an allowlist or restrict to safe local paths.",
+    "tags": [
+      "angular",
+      "router",
+      "navigate",
+      "open-redirect",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst next = this.route.snapshot.queryParams['next'];\nthis.router.navigateByUrl(next);"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst next = this.route.snapshot.queryParams['next'] ?? '/';\nif (next.startsWith('/') && !next.startsWith('//')) {\n  this.router.navigateByUrl(next);\n} else {\n  this.router.navigate(['/']);\n}"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "angular-activatedroute-window-location-taint",
+    "title": "Angular Route Params to window.location Open Redirect",
+    "framework": "angular",
+    "category": "routing-and-access-control",
+    "description": "Angular route params flow directly into window.location assignment, bypassing Angular Router's built-in protection. Use Angular Router's navigate() and validate the target path.",
+    "tags": [
+      "angular",
+      "router",
+      "window.location",
+      "open-redirect",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nthis.route.queryParams.subscribe((params) => {\n  window.location.href = params['returnUrl'];\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe\nthis.route.queryParams.subscribe((params) => {\n  const url = params['returnUrl'] ?? '/';\n  if (url.startsWith('/') && !url.startsWith('//')) {\n    this.router.navigateByUrl(url);\n  } else {\n    this.router.navigate(['/']);\n  }\n});"
+    ],
+    "lang": "typescript"
+  },
+  {
+    "id": "vue-router-redirect-taint",
+    "title": "Vue Router push() Open Redirect",
+    "framework": "vue",
+    "category": "routing-and-access-control",
+    "description": "Untrusted data flows into Vue Router push() or replace(). An attacker can redirect users to external malicious sites. Validate the URL is a relative path before navigating.",
+    "tags": [
+      "vue",
+      "vue-router",
+      "push",
+      "open-redirect",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst next = useRoute().query.next as string;\nuseRouter().push(next);"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst next = (useRoute().query.next as string) ?? '/';\nif (next.startsWith('/') && !next.startsWith('//')) {\n  useRouter().push(next);\n} else {\n  useRouter().push('/');\n}"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "vue-nuxt-ssrf-taint",
+    "title": "Nuxt Server-Side SSRF via User-Controlled URL",
+    "framework": "vue",
+    "category": "routing-and-access-control",
+    "description": "Untrusted user input flows into a Nuxt backend API call or server route fetch. An attacker can force the server to request arbitrary internal or external hosts. Validate the URL against a domain allowlist or restrict to relative paths.",
+    "tags": [
+      "nuxt",
+      "vue",
+      "ssrf",
+      "fetch",
+      "server-route",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-34351"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (Nuxt server route)\nexport default defineEventHandler(async (event) => {\n  const url = getQuery(event).url as string;\n  return await $fetch(url);\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe - allowlist hostname\nconst ALLOWED = ['api.example.com', 'cdn.example.com'];\nexport default defineEventHandler(async (event) => {\n  const url = getQuery(event).url as string;\n  if (!ALLOWED.includes(new URL(url).hostname)) throw createError({ statusCode: 400 });\n  return await $fetch(url);\n});"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "vue-nuxt-navigate-to-taint",
+    "title": "Nuxt navigateTo() Open Redirect",
+    "framework": "vue",
+    "category": "routing-and-access-control",
+    "description": "Untrusted user input flows into Nuxt navigateTo(). Paths prefixed with '//' redirect to external domains, and whitespace-injected javascript: URIs can bypass protocol checks. Validate URL is a relative path or restrict protocol to http/https.",
+    "tags": [
+      "nuxt",
+      "vue",
+      "navigate",
+      "open-redirect",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-34343"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst next = useRoute().query.next as string;\nawait navigateTo(next);"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst next = (useRoute().query.next as string) ?? '/';\nif (next.startsWith('/') && !next.startsWith('//')) {\n  await navigateTo(next);\n} else {\n  await navigateTo('/');\n}"
+    ],
+    "lang": "vue3"
+  },
+  {
+    "id": "svelte-sveltekit-redirect-user-url-taint",
+    "title": "SvelteKit redirect() Open Redirect",
+    "framework": "svelte",
+    "category": "routing-and-access-control",
+    "description": "Untrusted user input flows into SvelteKit's redirect(). SvelteKit performs no origin or protocol validation on the redirect URL, allowing javascript: URIs and external domain redirects. Validate the URL is a relative path or matches a trusted origin.",
+    "tags": [
+      "sveltekit",
+      "svelte",
+      "redirect",
+      "open-redirect",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (+page.server.ts)\nexport const actions = {\n  login: async ({ request }) => {\n    const next = (await request.formData()).get('next') as string;\n    throw redirect(303, next);\n  }\n};"
+    ],
+    "good_examples": [
+      "// ✅ safe\nexport const actions = {\n  login: async ({ request }) => {\n    const raw = (await request.formData()).get('next') as string ?? '/';\n    const safe = raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';\n    throw redirect(303, safe);\n  }\n};"
+    ],
+    "lang": "svelte"
+  },
+  {
+    "id": "svelte-sveltekit-event-url-ssrf-taint",
+    "title": "SvelteKit event.url Host Header SSRF",
+    "framework": "svelte",
+    "category": "routing-and-access-control",
+    "description": "SvelteKit event.url is constructed from the incoming Host header without validation. An attacker-controlled Host header causes server-side fetch() to contact arbitrary hosts. Use the ORIGIN environment variable or a hardcoded base URL instead of event.url.",
+    "tags": [
+      "sveltekit",
+      "svelte",
+      "ssrf",
+      "host-header",
+      "event.url",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (hooks.server.ts)\nexport async function handle({ event, resolve }) {\n  const apiUrl = `${event.url.origin}/api/internal`;\n  const data = await fetch(apiUrl);\n  return resolve(event);\n}"
+    ],
+    "good_examples": [
+      "// ✅ safe - use ORIGIN env var\nexport async function handle({ event, resolve }) {\n  const apiUrl = `${process.env.ORIGIN}/api/internal`;\n  const data = await fetch(apiUrl);\n  return resolve(event);\n}"
+    ],
+    "lang": "svelte"
+  },
+  {
+    "id": "dom-prototype-pollution-assignment-taint",
+    "title": "Prototype Pollution via Dynamic Property Assignment",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "Untrusted data is used to dynamically assign object properties. An attacker can inject '__proto__' to manipulate the global Object prototype, enabling XSS, RCE, or logic bypass. Avoid dynamic property keys from user input.",
+    "tags": [
+      "dom",
+      "prototype-pollution",
+      "__proto__",
+      "dynamic-key",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-21489"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst key = req.query.key; // attacker: '__proto__'\nobj[key] = req.query.val;\nObject.assign(target, req.body); // __proto__ in body"
+    ],
+    "good_examples": [
+      "// ✅ safe - blocklist dangerous keys\nconst BLOCKED = ['__proto__', 'constructor', 'prototype'];\nfunction safeSet(obj: Record<string, unknown>, key: string, val: unknown) {\n  if (!BLOCKED.includes(key)) obj[key] = val;\n}"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-merge-prototype-pollution-taint",
+    "title": "Prototype Pollution via Recursive Merge",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "Untrusted data flows into a recursive merge function. If the input contains '__proto__', it pollutes the global Object prototype. Use safe merge libraries or validate the input before merging.",
+    "tags": [
+      "dom",
+      "prototype-pollution",
+      "merge",
+      "lodash",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-38986"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport merge from 'deepmerge';\nconst config = merge(defaultConfig, req.body);\n// { \"__proto__\": { \"isAdmin\": true } } pollutes Object.prototype"
+    ],
+    "good_examples": [
+      "// ✅ safe - validate schema first\nimport { z } from 'zod';\nconst schema = z.object({ theme: z.string(), locale: z.string() });\nconst userConfig = schema.parse(req.body);\nconst config = { ...defaultConfig, ...userConfig };"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-setprototypeof-taint",
+    "title": "Prototype Pollution via Object.setPrototypeOf()",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "Untrusted data flows into Object.setPrototypeOf() or Reflect.setPrototypeOf(), directly replacing the prototype chain of the target object. Never pass user-controlled data as the prototype argument.",
+    "tags": [
+      "dom",
+      "prototype-pollution",
+      "setPrototypeOf",
+      "reflect",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst proto = JSON.parse(req.body.prototype);\nObject.setPrototypeOf(target, proto);"
+    ],
+    "good_examples": [
+      "// ✅ safe - use Object.create(null)\nconst safe = Object.create(null);\nObject.assign(safe, validatedFields);\n// Never call setPrototypeOf with user-supplied data"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-reflect-set-tainted-key-taint",
+    "title": "Prototype Pollution via Reflect.set with User Key",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "Untrusted data is used as a property key in Reflect.set() or Reflect.defineProperty(). An attacker can use '__proto__' as the key to pollute Object.prototype. Validate or blocklist '__proto__', 'constructor', and 'prototype' before use.",
+    "tags": [
+      "dom",
+      "prototype-pollution",
+      "reflect",
+      "dynamic-key",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst key = req.body.key; // attacker: '__proto__'\nReflect.set(target, key, req.body.value);"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst BLOCKED = ['__proto__', 'constructor', 'prototype'];\nif (!BLOCKED.includes(req.body.key)) {\n  Reflect.set(target, req.body.key, req.body.value);\n}"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-jquery-deep-extend-taint",
+    "title": "Prototype Pollution via jQuery $.extend(true, ...)",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "Untrusted data flows into jQuery $.extend(true, ...) deep merge. If the input contains '__proto__', it pollutes Object.prototype across the application. Upgrade jQuery to >= 3.4.0 and sanitize inputs before merging.",
+    "tags": [
+      "dom",
+      "jquery",
+      "prototype-pollution",
+      "deep-extend",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2019-11358"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe (jQuery < 3.4.0)\nconst opts = JSON.parse(userInput);\n$.extend(true, appConfig, opts);\n// { \"__proto__\": { \"isAdmin\": true } }"
+    ],
+    "good_examples": [
+      "// ✅ safe - validate schema + use jQuery >= 3.4.0\nconst safeOpts = validateOptions(userInput);\n$.extend(true, appConfig, safeOpts);"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-object-prototype-direct-modification",
+    "title": "Direct Object.prototype Modification",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "Application code directly modifies Object.prototype or a constructor prototype. This pollutes the prototype chain for all objects, potentially enabling XSS or RCE. Polyfills should use feature detection, not direct Object.prototype modification.",
+    "tags": [
+      "dom",
+      "prototype-pollution",
+      "Object.prototype",
+      "polyfill"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nObject.prototype.isAdmin = false;\nwindow.__proto__.trackingId = generateId();"
+    ],
+    "good_examples": [
+      "// ✅ safe polyfill with feature detection\nif (typeof Object.prototype.myMethod === 'undefined') {\n  Object.defineProperty(Object.prototype, 'myMethod', {\n    value() { /* polyfill */ },\n    writable: true, configurable: true, enumerable: false\n  });\n}"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-window-bracket-access-taint",
+    "title": "Arbitrary window[] Access via User-Controlled Key",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "Untrusted input is used to access window[] or globalThis[] via bracket notation, allowing reading or invoking any global (eval, Function, document.cookie, etc.). Constrain allowed keys to an explicit allowlist.",
+    "tags": [
+      "dom",
+      "window",
+      "globalThis",
+      "xss",
+      "arbitrary-access",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst fn = new URLSearchParams(window.location.search).get('action');\nwindow[fn](); // ?action=eval → window.eval()"
+    ],
+    "good_examples": [
+      "// ✅ safe - explicit allowlist\nconst ALLOWED = ['openMenu', 'closeModal', 'refreshData'];\nconst fn = new URLSearchParams(window.location.search).get('action');\nif (ALLOWED.includes(fn)) (window as any)[fn]();"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-window-name-taint",
+    "title": "window.name Attacker-Controlled XSS Source",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "window.name is used in a security-sensitive operation. window.name persists across cross-origin navigations and is fully controlled by any previously visited page. Never use window.name as a trusted data source.",
+    "tags": [
+      "dom",
+      "window.name",
+      "xss",
+      "cross-origin",
+      "taint"
+    ],
+    "references": [
+      "https://portswigger.net/research/dom-based-vulnerabilities"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst config = JSON.parse(window.name);\ndocument.getElementById('output').innerHTML = config.html;"
+    ],
+    "good_examples": [
+      "// ✅ safe - use postMessage with origin check instead\nwindow.addEventListener('message', (e) => {\n  if (e.origin !== 'https://trusted.example.com') return;\n  document.getElementById('output').textContent = JSON.parse(e.data).text;\n});"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-window-sensitive-property-assignment",
+    "title": "Sensitive Data Assigned to window.*",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "A property with a sensitive name is assigned to window or globalThis. All scripts in the browsing context including third-party scripts and extensions can read window.* properties. Use module-scoped variables or closures instead.",
+    "tags": [
+      "dom",
+      "window",
+      "sensitive-data",
+      "global-scope",
+      "token"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/DOM_based_XSS_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - readable by any script\nwindow.authToken = getAuthToken();\nwindow.apiKey = 'sk-live-abc123';"
+    ],
+    "good_examples": [
+      "// ✅ safe - module-scoped closure\nconst tokenStore = (() => {\n  let token: string | null = null;\n  return { set: (t: string) => { token = t; }, get: () => token };\n})();"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "dom-clobbering-var-global-fallback",
+    "title": "DOM Clobbering via var window.X Fallback",
+    "framework": "general",
+    "category": "global-state-and-data-access",
+    "description": "A var declaration uses window.X as a fallback value. Browsers create window.X references for HTML elements with id=\"X\", so an attacker with HTML injection can shadow this variable with an HTMLElement. Replace with let/const declarations and avoid window.X || {} fallback patterns.",
+    "tags": [
+      "dom",
+      "dom-clobbering",
+      "var",
+      "xss",
+      "html-injection"
+    ],
+    "references": [
+      "https://portswigger.net/research/dom-clobbering"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - <form id=\"config\"><input id=\"isAdmin\"> clobbers this\nvar config = window.config || {};\nif (config.isAdmin) grantElevatedAccess();"
+    ],
+    "good_examples": [
+      "// ✅ safe - use const/let, never window.X fallback\nconst config: AppConfig = { isAdmin: false, theme: 'light' };"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-lodash-insecure-template",
+    "title": "Lodash _.template() Code Execution",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Lodash _.template() with the 'variable' option allows arbitrary code execution when template strings are user-controlled. Never generate templates dynamically from user input.",
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2021-23337"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst tmpl = req.body.template;\nconst compiled = _.template(tmpl, { variable: 'data' });\nconst output = compiled({ user }); // RCE"
+    ],
+    "good_examples": [
+      "// ✅ safe - compile only static literal templates\nconst compiled = _.template('Hello <%= data.name %>!', { variable: 'data' });\nconst output = compiled({ name: _.escape(userInput) });"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-markdown-xss-taint",
+    "title": "Markdown Parser XSS via Unsanitized Output",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted data flows into a Markdown parser. Most parsers (marked, showdown, markdown-it) do not sanitize HTML tags or 'javascript:' URIs by default. Wrap the output with DOMPurify.sanitize() before inserting into the DOM.",
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport { marked } from 'marked';\nconst html = marked.parse(userMarkdown);\ndocument.getElementById('output').innerHTML = html;\n// [click me](javascript:alert(1)) executes"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport { marked } from 'marked';\nimport DOMPurify from 'dompurify';\nconst html = DOMPurify.sanitize(marked.parse(userMarkdown));\ndocument.getElementById('output').innerHTML = html;"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-dompurify-dangerous-config",
+    "title": "DOMPurify Dangerous Configuration Bypasses XSS Protection",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "DOMPurify is configured with options that disable core protections such as allowing 'script'/'iframe' tags, event handler attributes, or unknown protocols. Remove dangerous config options to restore sanitization.",
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst clean = DOMPurify.sanitize(input, {\n  ALLOWED_TAGS: ['p', 'b', 'script'],\n  ADD_ATTR: ['onclick', 'onerror'],\n  ALLOW_UNKNOWN_PROTOCOLS: true\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe - minimal safe subset\nconst clean = DOMPurify.sanitize(input, {\n  ALLOWED_TAGS: ['p', 'b', 'i', 'em', 'strong', 'a'],\n  ALLOWED_ATTR: ['href', 'title'],\n  FORCE_BODY: true\n});"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-sanitize-html-dangerous-config",
+    "title": "sanitize-html Dangerous Config Bypasses XSS Protection",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "sanitize-html is configured with allowedTags or allowedAttributes that permit script execution, including 'script'/'iframe' tags or event handler attributes. Use the default config or a minimal safe subset.",
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst clean = sanitizeHtml(input, {\n  allowedTags: ['p', 'b', 'script', 'iframe'],\n  allowedAttributes: { '*': ['onerror', 'onload'] }\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe\nconst clean = sanitizeHtml(input, {\n  allowedTags: ['p', 'b', 'i', 'em', 'strong'],\n  allowedAttributes: { 'a': ['href'] }\n});"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-handlebars-template-injection-taint",
+    "title": "Handlebars Template Injection RCE",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted user input flows into Handlebars template compilation. A user-controlled template string allows executing arbitrary code. Templates must be static developer-defined strings, never user input.",
+    "tags": [
+      "handlebars",
+      "template-injection",
+      "rce",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-39935"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport Handlebars from 'handlebars';\nconst tmpl = req.body.template;\nconst html = Handlebars.compile(tmpl)({ user }); // RCE"
+    ],
+    "good_examples": [
+      "// ✅ safe - static developer-defined template only\nimport Handlebars from 'handlebars';\nconst compiled = Handlebars.compile('<p>Hello {{name}}</p>');\nconst html = compiled({ name: Handlebars.escapeExpression(userInput) });"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-nunjucks-template-injection-taint",
+    "title": "Nunjucks SSTI / RCE via renderString()",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted user input flows into nunjucks.renderString() as the template string. Template expressions execute in the Nunjucks context and can access Node.js internals. Pass user input only as data, never as the template string itself.",
+    "tags": [
+      "nunjucks",
+      "ssti",
+      "rce",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-27448"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport nunjucks from 'nunjucks';\nconst output = nunjucks.renderString(req.body.template, { user });\n// {{ range.constructor(\"return global.process.env\")() }}"
+    ],
+    "good_examples": [
+      "// ✅ safe - user data as context, static template file\nimport nunjucks from 'nunjucks';\nconst output = nunjucks.render('email.html', {\n  name: req.body.name,\n  message: req.body.message\n});"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-eta-template-injection-taint",
+    "title": "Eta SSTI / RCE via renderString()",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted user input flows into Eta's renderString(). User-controlled template arguments allow arbitrary code injection via Eta's template syntax. Template strings must be static developer-defined literals.",
+    "tags": [
+      "eta",
+      "ssti",
+      "rce",
+      "code-execution",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-27448"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport { Eta } from 'eta';\nconst eta = new Eta();\nconst output = eta.renderString(req.body.template, { user });\n// <%~ process.mainModule.require('child_process').execSync('id') %>"
+    ],
+    "good_examples": [
+      "// ✅ safe - render static template files\nimport { Eta } from 'eta';\nconst eta = new Eta({ views: path.join(__dirname, 'templates') });\nconst output = eta.render('welcome.eta', { name: sanitize(req.body.name) });"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-superjson-deserialize-taint",
+    "title": "superjson Deserialization Prototype Pollution / RCE",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted data flows into superjson.deserialize() or superjson.parse(). Attacker-controlled input can trigger prototype pollution leading to RCE. Validate all input with a schema (e.g., Zod) before deserializing.",
+    "tags": [
+      "superjson",
+      "prototype-pollution",
+      "rce",
+      "deserialization",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-21489"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport superjson from 'superjson';\nconst data = superjson.parse(req.body.data);\n// { \"json\": { \"__proto__\": { \"isAdmin\": true } } }"
+    ],
+    "good_examples": [
+      "// ✅ safe - schema validation before deserializing\nimport superjson from 'superjson';\nimport { z } from 'zod';\nconst schema = z.object({ name: z.string(), age: z.number() });\nconst data = schema.parse(superjson.parse(req.body.data));"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-devalue-parse-taint",
+    "title": "devalue Deserialization Prototype Pollution / RCE",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted data flows into devalue.parse() or devalue.unflatten(). Attacker-controlled input can cause prototype pollution leading to RCE. Validate incoming data with a schema before passing to devalue.",
+    "tags": [
+      "devalue",
+      "prototype-pollution",
+      "rce",
+      "deserialization",
+      "taint"
+    ],
+    "references": [
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-21489"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport * as devalue from 'devalue';\nconst data = devalue.parse(req.body.serialized);"
+    ],
+    "good_examples": [
+      "// ✅ safe - validate after parsing\nimport * as devalue from 'devalue';\nimport { z } from 'zod';\nconst schema = z.object({ id: z.string(), value: z.number() });\nconst data = schema.parse(devalue.parse(req.body.serialized));"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-jspdf-xss-taint",
+    "title": "jsPDF XSS via User-Controlled HTML Input",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted user input flows into a jsPDF method that accepts HTML or executes code. Multiple attack surfaces exist including HTML injection and script injection. Sanitize all user input with DOMPurify before passing to jsPDF.",
+    "tags": [
+      "jspdf",
+      "pdf",
+      "xss",
+      "html-injection",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport jsPDF from 'jspdf';\nconst doc = new jsPDF();\nconst html = new URLSearchParams(location.search).get('content');\ndoc.html(html);"
+    ],
+    "good_examples": [
+      "// ✅ safe\nimport jsPDF from 'jspdf';\nimport DOMPurify from 'dompurify';\nconst doc = new jsPDF();\nconst html = new URLSearchParams(location.search).get('content') ?? '';\ndoc.html(DOMPurify.sanitize(html));"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-html2pdf-xss-taint",
+    "title": "html2pdf.js XSS via innerHTML Assignment",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted user input is passed as a string to html2pdf(). When the source is a string, html2pdf.js assigns it directly to innerHTML. Sanitize with DOMPurify before passing, or pass a pre-rendered DOM element.",
+    "tags": [
+      "html2pdf",
+      "pdf",
+      "xss",
+      "innerHTML",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nimport html2pdf from 'html2pdf.js';\nconst userHtml = new URLSearchParams(location.search).get('html');\nhtml2pdf(userHtml);"
+    ],
+    "good_examples": [
+      "// ✅ safe - pass a DOM element\nimport html2pdf from 'html2pdf.js';\nimport DOMPurify from 'dompurify';\nconst container = document.createElement('div');\ncontainer.innerHTML = DOMPurify.sanitize(userHtml);\nhtml2pdf(container);"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-jwt-decode-without-verify",
+    "title": "JWT Decoded Without Signature Verification",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "jwt.decode() is used without signature verification. jwt.decode() only base64-decodes the payload and performs no cryptographic validation. An attacker can forge arbitrary claims. Always use jwt.verify() with an explicit algorithm list.",
+    "tags": [
+      "jwt",
+      "access-control",
+      "authentication",
+      "signature",
+      "forge"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/JSON_Web_Token_for_Java_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe - no signature verification\nimport jwt from 'jsonwebtoken';\nconst payload = jwt.decode(token); // forged tokens trusted\nif ((payload as any).role === 'admin') grantAccess();"
+    ],
+    "good_examples": [
+      "// ✅ safe - verify with explicit algorithm\nimport jwt from 'jsonwebtoken';\ntry {\n  const payload = jwt.verify(token, process.env.JWT_SECRET!, {\n    algorithms: ['HS256']\n  });\n  if ((payload as any).role === 'admin') grantAccess();\n} catch {\n  denyAccess();\n}"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-d3-html-xss-taint",
+    "title": "D3.js .html() XSS via User-Controlled Content",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted user input flows into D3.js's .html() method or a dangerous attribute binding. D3's .html() sets innerHTML directly and is an intentional XSS sink. Use .text() for user-controlled content or sanitize with DOMPurify before calling .html().",
+    "tags": [
+      "d3",
+      "xss",
+      "innerHTML",
+      "svg",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst label = new URLSearchParams(location.search).get('label');\nd3.select('#tooltip').html(label);\nd3.select('a').attr('href', `javascript:${userInput}`);"
+    ],
+    "good_examples": [
+      "// ✅ safe - .text() for user content\nconst label = new URLSearchParams(location.search).get('label') ?? '';\nd3.select('#tooltip').text(label); // textContent, no HTML parsing"
+    ],
+    "lang": "javascript"
+  },
+  {
+    "id": "lib-highcharts-usehtml-taint",
+    "title": "Highcharts useHTML:true XSS via User Data",
+    "framework": "general",
+    "category": "dependencies-and-external-libraries",
+    "description": "Untrusted data flows into a Highcharts chart option with useHTML:true. In this mode, Highcharts inserts string values via innerHTML. Sanitize user input with DOMPurify before passing to chart configuration.",
+    "tags": [
+      "highcharts",
+      "xss",
+      "innerHTML",
+      "useHTML",
+      "taint"
+    ],
+    "references": [
+      "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html"
+    ],
+    "bad_examples": [
+      "// ❌ unsafe\nconst title = new URLSearchParams(location.search).get('title');\nHighcharts.chart('container', {\n  title: { text: title, useHTML: true }\n});"
+    ],
+    "good_examples": [
+      "// ✅ safe - sanitize or disable useHTML\nimport DOMPurify from 'dompurify';\nconst rawTitle = new URLSearchParams(location.search).get('title') ?? '';\nHighcharts.chart('container', {\n  title: { text: DOMPurify.sanitize(rawTitle), useHTML: true }\n});"
+    ],
+    "lang": "javascript"
+  }
+]
