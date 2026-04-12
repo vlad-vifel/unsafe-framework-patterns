@@ -29,7 +29,7 @@ jobs:
 
       - run: npm run build
         env:
-          VITE_BASE_URL: /
+          VITE_BASE_URL: /unsafe-framework-patterns/
 
       - uses: actions/upload-pages-artifact@v3
         with:
