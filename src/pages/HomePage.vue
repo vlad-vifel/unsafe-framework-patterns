@@ -6,19 +6,19 @@
     </h1>
 
     <div class="grid grid-cols-3 gap-3">
-      <Card class="text-center gap-2 py-4 shadow-none bg-card/80 dark:bg-card/60 cursor-pointer hover:border-primary/40 hover:bg-card/60 dark:hover:bg-card/20 transition-colors">
+      <Card class="text-center gap-2 py-4 shadow-none border border-border bg-card/80 dark:bg-card/60 cursor-pointer hover:border-primary/40 hover:bg-card/60 dark:hover:bg-card/20 transition-colors">
         <CardContent class="px-3 pb-0">
           <div class="text-2xl font-bold text-primary">{{ patternCount }}</div>
           <div class="text-xs text-muted-foreground dark:text-foreground mt-0.5">Patterns</div>
         </CardContent>
       </Card>
-      <Card class="text-center gap-2 py-4 shadow-none bg-card/80 dark:bg-card/60 cursor-pointer hover:border-primary/40 hover:bg-card/60 dark:hover:bg-card/20 transition-colors">
+      <Card class="text-center gap-2 py-4 shadow-none border border-border bg-card/80 dark:bg-card/60 cursor-pointer hover:border-primary/40 hover:bg-card/60 dark:hover:bg-card/20 transition-colors">
         <CardContent class="px-3 pb-0">
           <div class="text-2xl font-bold text-primary">{{ frameworkCount - 1 }}</div>
           <div class="text-xs text-muted-foreground dark:text-foreground mt-0.5">Frameworks</div>
         </CardContent>
       </Card>
-      <Card class="text-center gap-2 py-4 shadow-none bg-card/80 dark:bg-card/60 cursor-pointer hover:border-primary/40 hover:bg-card/60 dark:hover:bg-card/20 transition-colors">
+      <Card class="text-center gap-2 py-4 shadow-none border border-border bg-card/80 dark:bg-card/60 cursor-pointer hover:border-primary/40 hover:bg-card/60 dark:hover:bg-card/20 transition-colors">
         <CardContent class="px-3 pb-0">
           <div class="text-2xl font-bold text-primary">{{ categoryCount }}</div>
           <div class="text-xs text-muted-foreground dark:text-foreground mt-0.5">Categories</div>
