@@ -1,4 +1,4 @@
-import { nextTick, onUnmounted, type Ref,ref, watch } from 'vue'
+import { nextTick, onUnmounted, type Ref, ref, watch } from 'vue'
 
 import type { Pattern } from './usePatterns'
 

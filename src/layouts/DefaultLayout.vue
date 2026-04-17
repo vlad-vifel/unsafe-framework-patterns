@@ -27,7 +27,7 @@
                 <BreadcrumbItem class="min-w-0" :class="i === breadcrumbs.length - 1 ? 'overflow-hidden' : 'shrink-0'">
                   <BreadcrumbLink as-child>
                     <RouterLink
-                      :to="crumb.href ?? '/'"
+                      :to="crumb.href"
                       class="text-muted-foreground hover:text-primary text-sm cursor-pointer transition-colors"
                       :class="
                         i === breadcrumbs.length - 1
@@ -183,18 +183,18 @@ function onMainScroll(e: Event): void {
 
 interface Crumb {
   label: string
-  href?: RouteLocationRaw
+  href: RouteLocationRaw
 }
 
 const breadcrumbs = computed<Crumb[]>(() => {
   if (isHome.value) return []
 
   if (route.name === 'patterns') {
-    return [{ label: 'All patterns' }]
+    return [{ label: 'All patterns', href: '/patterns' }]
   }
 
   if (route.name === 'frameworks') {
-    return [{ label: 'Frameworks' }]
+    return [{ label: 'Frameworks', href: '/frameworks' }]
   }
 
   if (route.name === 'framework') {
@@ -231,6 +231,7 @@ const breadcrumbs = computed<Crumb[]>(() => {
     const patternId = String(route.params.id)
     const pattern = allPatterns.find((p) => p.id === patternId)
     const title = pattern?.title ?? patternId
+    const selfHref = { name: 'pattern', params: { id: patternId }, query: route.query }
 
     const from = asString(route.query.from)
     const fromId = asString(route.query.fromId)
@@ -241,7 +242,7 @@ const breadcrumbs = computed<Crumb[]>(() => {
       return [
         { label: 'Frameworks', href: '/frameworks' },
         { label: fwName, href: `/framework/${fromId}` },
-        { label: title },
+        { label: title, href: selfHref },
       ]
     }
 
@@ -250,7 +251,7 @@ const breadcrumbs = computed<Crumb[]>(() => {
       return [
         { label: 'Categories', href: '/categories' },
         { label: catName, href: `/category/${fromId}` },
-        { label: title },
+        { label: title, href: selfHref },
       ]
     }
 
@@ -258,11 +259,11 @@ const breadcrumbs = computed<Crumb[]>(() => {
       return [
         { label: 'Search', href: '/search' },
         { label: `"${q}"`, href: { path: '/search', query: { q } } },
-        { label: title },
+        { label: title, href: selfHref },
       ]
     }
 
-    return [{ label: title }]
+    return [{ label: title, href: selfHref }]
   }
 
   return []

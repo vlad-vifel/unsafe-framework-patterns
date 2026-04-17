@@ -1,4 +1,4 @@
-import { type Ref,ref } from 'vue'
+import { type Ref, ref } from 'vue'
 
 const isOpen = ref<boolean>(false)
 

@@ -16,7 +16,8 @@
       <div class="space-y-1 pb-4 border-b border-border">
         <p class="text-xs text-muted-foreground uppercase tracking-widest font-medium">Search</p>
         <h1 class="text-2xl font-bold tracking-tight text-foreground">
-          Results for <span class="text-primary">"{{ query }}"</span>
+          Results for
+          <span class="text-primary">"{{ query }}"</span>
         </h1>
         <p class="text-sm text-muted-foreground">
           {{ patterns.length }} pattern{{ patterns.length !== 1 ? 's' : '' }} found
@@ -25,7 +26,8 @@
 
       <div v-if="patterns.length === 0" class="py-16 text-center space-y-2">
         <p class="text-muted-foreground text-sm">
-          No patterns found for <strong class="text-foreground">"{{ query }}"</strong>
+          No patterns found for
+          <strong class="text-foreground">"{{ query }}"</strong>
         </p>
         <RouterLink to="/search" class="text-primary text-sm hover:underline underline-offset-4">
           ← Clear search
@@ -40,14 +42,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
 import { Search } from 'lucide-vue-next'
-import { runSearch } from '@/composables/useSearch'
-import { usePageAnchors } from '@/composables/usePageAnchors'
-import { useCommandPalette } from '@/composables/useCommandPalette'
+import { computed } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+
 import PatternCard from '@/components/PatternCard.vue'
 import Kbd from '@/components/ui/kbd/Kbd.vue'
+import { useCommandPalette } from '@/composables/useCommandPalette'
+import { usePageAnchors } from '@/composables/usePageAnchors'
+import { runSearch } from '@/composables/useSearch'
 
 const route = useRoute()
 const { open } = useCommandPalette()

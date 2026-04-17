@@ -1,5 +1,5 @@
 import type { Highlighter } from 'shiki'
-import { type Ref,ref } from 'vue'
+import { type Ref, ref } from 'vue'
 
 let highlighterPromise: Promise<Highlighter> | null = null
 

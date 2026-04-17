@@ -1,4 +1,4 @@
-import { inject, type Ref,watch } from 'vue'
+import { inject, type Ref, watch } from 'vue'
 
 import { type AnchorItem, useAnchors } from './useAnchors'
 import type { Pattern } from './usePatterns'
