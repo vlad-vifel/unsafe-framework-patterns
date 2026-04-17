@@ -8,18 +8,13 @@ export interface AnchorItem {
   active: boolean
 }
 
-export interface AnchorsState {
-  anchors: Ref<AnchorItem[]>
-  activeId: Ref<string>
-}
-
-export function useAnchors(patterns: Ref<Pattern[]>): AnchorsState {
+export function useAnchors(patterns: Ref<Pattern[]>) {
   const anchors = ref<AnchorItem[]>([])
-  const activeId = ref<string>('')
+  const activeId = ref('')
 
   let observer: IntersectionObserver | null = null
 
-  function buildAnchors(): void {
+  function buildAnchors() {
     anchors.value = patterns.value.map((p) => ({
       id: p.id,
       title: p.title,
@@ -27,11 +22,10 @@ export function useAnchors(patterns: Ref<Pattern[]>): AnchorsState {
     }))
   }
 
-  function observeElements(): void {
+  function observeElements() {
     observer?.disconnect()
 
     const root = document.getElementById('main-content')
-
     observer = new IntersectionObserver(
       (entries) => {
         const intersecting = entries
@@ -43,11 +37,7 @@ export function useAnchors(patterns: Ref<Pattern[]>): AnchorsState {
           anchors.value = anchors.value.map((a) => ({ ...a, active: a.id === id }))
         }
       },
-      {
-        root,
-        rootMargin: '-56px 0px -55% 0px',
-        threshold: 0,
-      }
+      { root, rootMargin: '-56px 0px -55% 0px', threshold: 0 }
     )
 
     nextTick(() => {

@@ -158,22 +158,11 @@ interface NavItem {
   icon: Component
 }
 
-interface FwItem {
-  label: string
-  to: string
-  dot: string | undefined
-}
-
-interface CatItem {
-  label: string
-  to: string
-}
-
 const { isOpen, close } = useCommandPalette()
 const router = useRouter()
 
-const query = ref<string>('')
-const focusedIndex = ref<number>(-1)
+const query = ref('')
+const focusedIndex = ref(-1)
 const inputRef = ref<HTMLInputElement | null>(null)
 const listRef = ref<HTMLElement | null>(null)
 
@@ -184,18 +173,18 @@ const NAV: NavItem[] = [
   { label: 'Categories', to: '/categories', icon: Tag },
 ]
 
-const FW_ITEMS: FwItem[] = allFrameworks.map((fw) => ({
+const FW_ITEMS = allFrameworks.map((fw) => ({
   label: fw.name,
   to: `/framework/${fw.id}`,
   dot: FRAMEWORK_DOT[fw.id],
 }))
 
-const CAT_ITEMS: CatItem[] = allCategories.map((cat) => ({
+const CAT_ITEMS = allCategories.map((cat) => ({
   label: cat.name,
   to: `/category/${cat.id}`,
 }))
 
-function filterByQuery<T extends { label: string }>(items: T[]): T[] {
+function filterByQuery<T extends { label: string }>(items: T[]) {
   if (!query.value.trim()) return items
   const q = query.value.toLowerCase()
   return items.filter((item) => item.label.toLowerCase().includes(q))
@@ -224,14 +213,14 @@ watch(isOpen, async (val) => {
   }
 })
 
-function scrollToFocused(): void {
+function scrollToFocused() {
   nextTick(() => {
     const el = listRef.value?.querySelector(`[data-idx="${focusedIndex.value}"]`) as HTMLElement | null
     el?.scrollIntoView({ block: 'nearest' })
   })
 }
 
-function onKeydown(e: KeyboardEvent): void {
+function onKeydown(e: KeyboardEvent) {
   if (e.key === 'ArrowDown') {
     e.preventDefault()
     focusedIndex.value = focusedIndex.value < totalItems.value - 1 ? focusedIndex.value + 1 : 0
@@ -257,25 +246,25 @@ function onKeydown(e: KeyboardEvent): void {
   }
 }
 
-function goTo(to: string): void {
+function goTo(to: string) {
   close()
   router.push(to)
 }
 
-function goToPattern(p: Pattern): void {
+function goToPattern(p: Pattern) {
   close()
   router.push({ name: 'pattern', params: { id: p.id }, query: { from: 'search', q: query.value } })
 }
 
-function frameworkLabel(id: string): string {
+function frameworkLabel(id: string) {
   return allFrameworks.find((f) => f.id === id)?.name ?? id
 }
 
-function categoryLabel(id: string): string {
+function categoryLabel(id: string) {
   return allCategories.find((c) => c.id === id)?.name ?? id
 }
 
-function onGlobalKeydown(e: KeyboardEvent): void {
+function onGlobalKeydown(e: KeyboardEvent) {
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
     e.preventDefault()
     e.stopPropagation()

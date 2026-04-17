@@ -79,7 +79,7 @@ const html = ref('')
 const copied = ref(false)
 const isLoading = ref(true)
 
-async function render(): Promise<void> {
+async function render() {
   isLoading.value = true
   await ensureHighlighter()
   html.value = highlight(props.code, props.lang!, theme.value === 'dark')
@@ -89,7 +89,7 @@ async function render(): Promise<void> {
 onMounted(render)
 watch(() => [props.code, props.lang, theme.value], render)
 
-async function copyCode(): Promise<void> {
+async function copyCode() {
   try {
     await navigator.clipboard.writeText(props.code)
     copied.value = true

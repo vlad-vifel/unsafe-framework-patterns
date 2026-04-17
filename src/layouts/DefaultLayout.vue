@@ -149,8 +149,8 @@ import type { AnchorItem } from '@/composables/useAnchors'
 import { allCategories, allFrameworks, allPatterns } from '@/composables/usePatterns'
 
 const anchors = ref<AnchorItem[]>([])
-const activeId = ref<string>('')
-const showBackToTop = ref<boolean>(false)
+const activeId = ref('')
+const showBackToTop = ref(false)
 
 provide('setAnchors', (items: AnchorItem[]) => {
   anchors.value = items
@@ -160,23 +160,21 @@ provide('setActiveId', (id: string) => {
 })
 
 const route = useRoute()
-const isHome = computed<boolean>(() => route.name === 'home')
+const isHome = computed(() => route.name === 'home')
 
 function asString(v: unknown): string | null {
   return typeof v === 'string' ? v : null
 }
 
-function scrollToAnchor(id: string): void {
-  const el = document.getElementById(id)
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+function scrollToAnchor(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
-function scrollToTop(): void {
-  const el = document.getElementById('main-content')
-  if (el) el.scrollTo({ top: 0, behavior: 'smooth' })
+function scrollToTop() {
+  document.getElementById('main-content')?.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-function onMainScroll(e: Event): void {
+function onMainScroll(e: Event) {
   const target = e.target as HTMLElement | null
   if (target) showBackToTop.value = target.scrollTop > 300
 }

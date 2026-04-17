@@ -3,7 +3,7 @@ import { inject, type Ref, watch } from 'vue'
 import { type AnchorItem, useAnchors } from './useAnchors'
 import type { Pattern } from './usePatterns'
 
-export function usePageAnchors(patterns: Ref<Pattern[]>): void {
+export function usePageAnchors(patterns: Ref<Pattern[]>) {
   const setAnchors = inject<(items: AnchorItem[]) => void>('setAnchors')
   const setActiveId = inject<(id: string) => void>('setActiveId')
   const { anchors, activeId } = useAnchors(patterns)
@@ -11,9 +11,7 @@ export function usePageAnchors(patterns: Ref<Pattern[]>): void {
   watch(activeId, (id) => setActiveId?.(id), { immediate: true })
 }
 
-export function clearPageAnchors(): void {
-  const setAnchors = inject<(items: AnchorItem[]) => void>('setAnchors')
-  const setActiveId = inject<(id: string) => void>('setActiveId')
-  setAnchors?.([])
-  setActiveId?.('')
+export function clearPageAnchors() {
+  inject<(items: AnchorItem[]) => void>('setAnchors')?.([])
+  inject<(id: string) => void>('setActiveId')?.('')
 }

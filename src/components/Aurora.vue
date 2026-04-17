@@ -142,7 +142,7 @@ let renderer: Renderer | null = null
 let animateId = 0
 let cancelAurora: (() => void) | null = null
 
-function initAurora(): (() => void) | null {
+function initAurora() {
   const container = containerRef.value
   if (!container) return null
 

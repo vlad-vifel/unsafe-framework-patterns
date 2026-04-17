@@ -1,18 +1,12 @@
-import { type Ref, ref } from 'vue'
+import { ref } from 'vue'
 
-const isOpen = ref<boolean>(false)
+const isOpen = ref(false)
 
-export interface CommandPaletteState {
-  isOpen: Ref<boolean>
-  open: () => void
-  close: () => void
-}
-
-export function useCommandPalette(): CommandPaletteState {
-  function open(): void {
+export function useCommandPalette() {
+  function open() {
     isOpen.value = true
   }
-  function close(): void {
+  function close() {
     isOpen.value = false
   }
   return { isOpen, open, close }
