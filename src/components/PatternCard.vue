@@ -6,11 +6,7 @@
     :class="isPatternPage ? 'py-4' : 'py-6'"
   >
     <div class="mb-2">
-      <RouterLink
-        v-if="!isPatternPage"
-        :to="patternHref"
-        class="group block cursor-pointer"
-      >
+      <RouterLink v-if="!isPatternPage" :to="patternHref" class="group block cursor-pointer">
         <h2 class="text-2xl font-semibold tracking-tight text-foreground group-hover:text-primary transition-colors">
           {{ pattern.title }}
         </h2>
@@ -50,13 +46,15 @@
 </template>
 
 <script setup lang="ts">
-import type { Pattern } from '@/composables/usePatterns'
-import { allFrameworks, allCategories } from '@/composables/usePatterns'
+import { Lock, ShieldOff } from 'lucide-vue-next'
 import { computed } from 'vue'
-import { useRoute, RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
+
+import type { Pattern } from '@/composables/usePatterns'
+import { allCategories, allFrameworks } from '@/composables/usePatterns'
+
 import CodeTabGroup from './CodeTabGroup.vue'
 import Badge from './ui/badge.vue'
-import { Lock, ShieldOff } from 'lucide-vue-next'
 
 const props = defineProps<{ pattern: Pattern }>()
 
@@ -79,31 +77,32 @@ const patternHref = computed(() => {
 })
 
 const frameworkName = computed(
-  () => allFrameworks.find((f) => f.id === props.pattern.framework)?.name ?? props.pattern.framework,
+  () => allFrameworks.find((f) => f.id === props.pattern.framework)?.name ?? props.pattern.framework
 )
 const categoryName = computed(
-  () => allCategories.find((c) => c.id === props.pattern.category)?.name ?? props.pattern.category,
+  () => allCategories.find((c) => c.id === props.pattern.category)?.name ?? props.pattern.category
 )
 
 const FRAMEWORK_COLORS: Record<string, string> = {
-  react:   'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border-sky-200 dark:border-sky-800',
-  vue:     'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+  react: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300 border-sky-200 dark:border-sky-800',
+  vue: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
   angular: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border-red-200 dark:border-red-800',
-  svelte:  'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+  svelte:
+    'bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300 border-orange-200 dark:border-orange-800',
   general: 'bg-zinc-100 text-zinc-800 dark:bg-zinc-400/40 dark:text-zinc-300 border-zinc-200 dark:border-zick-800',
 }
 
 const frameworkColor = computed(
-  () => FRAMEWORK_COLORS[props.pattern.framework] ?? 'bg-muted text-muted-foreground border-border',
+  () => FRAMEWORK_COLORS[props.pattern.framework] ?? 'bg-muted text-muted-foreground border-border'
 )
 
-const codeLang = computed(() => {
+const codeLang = computed<string>(() => {
   if (props.pattern.lang) return props.pattern.lang
   const map: Record<string, string> = {
-    react:   'tsx',
-    vue:     'vue',
+    react: 'tsx',
+    vue: 'vue',
     angular: 'typescript',
-    svelte:  'html',
+    svelte: 'html',
     general: 'javascript',
   }
   return map[props.pattern.framework] ?? 'javascript'

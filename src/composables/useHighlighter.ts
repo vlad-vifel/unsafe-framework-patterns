@@ -1,10 +1,15 @@
-import { ref } from 'vue'
 import type { Highlighter } from 'shiki'
+import { type Ref,ref } from 'vue'
 
 let highlighterPromise: Promise<Highlighter> | null = null
 
 const THEMES = ['github-dark', 'github-light'] as const
 const LANGS = ['javascript', 'typescript', 'vue', 'html', 'jsx', 'tsx', 'css', 'bash', 'json'] as const
+
+export interface HighlighterState {
+  ensureHighlighter: () => Promise<Highlighter | null>
+  highlight: (code: string, lang: string, isDark: boolean) => string
+}
 
 async function initHighlighter(): Promise<Highlighter> {
   const { createHighlighter } = await import('shiki')
@@ -14,10 +19,10 @@ async function initHighlighter(): Promise<Highlighter> {
   })
 }
 
-export function useHighlighter() {
-  const highlighter = ref<Highlighter | null>(null)
+export function useHighlighter(): HighlighterState {
+  const highlighter = ref<Highlighter | null>(null) as Ref<Highlighter | null>
 
-  async function ensureHighlighter() {
+  async function ensureHighlighter(): Promise<Highlighter | null> {
     if (highlighter.value) return highlighter.value
 
     try {

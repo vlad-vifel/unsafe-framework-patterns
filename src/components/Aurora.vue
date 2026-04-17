@@ -3,18 +3,18 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch, type CSSProperties, useTemplateRef } from 'vue';
-import { Renderer, Program, Mesh, Color, Triangle } from 'ogl';
+import { Color, Mesh, Program, Renderer, Triangle } from 'ogl'
+import { type CSSProperties, onMounted, onUnmounted, useTemplateRef, watch } from 'vue'
 
 interface AuroraProps {
-  colorStops?: string[];
-  amplitude?: number;
-  blend?: number;
-  time?: number;
-  speed?: number;
-  intensity?: number;
-  className?: string;
-  style?: CSSProperties;
+  colorStops?: string[]
+  amplitude?: number
+  blend?: number
+  time?: number
+  speed?: number
+  intensity?: number
+  className?: string
+  style?: CSSProperties
 }
 
 const props = withDefaults(defineProps<AuroraProps>(), {
@@ -24,17 +24,17 @@ const props = withDefaults(defineProps<AuroraProps>(), {
   speed: 1.0,
   intensity: 1.0,
   className: '',
-  style: () => ({})
-});
+  style: () => ({}),
+})
 
-const containerRef = useTemplateRef<HTMLDivElement>('containerRef');
+const containerRef = useTemplateRef<HTMLDivElement>('containerRef')
 
 const VERT = `#version 300 es
 in vec2 position;
 void main() {
   gl_Position = vec4(position, 0.0, 1.0);
 }
-`;
+`
 
 const FRAG = `#version 300 es
 precision highp float;
@@ -74,7 +74,7 @@ float snoise(vec2 v){
           dot(x0, x0),
           dot(x12.xy, x12.xy),
           dot(x12.zw, x12.zw)
-      ), 
+      ),
       0.0
   );
   m = m * m;
@@ -113,78 +113,65 @@ struct ColorStop {
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
-  
+
   ColorStop colors[3];
   colors[0] = ColorStop(uColorStops[0], 0.0);
   colors[1] = ColorStop(uColorStops[1], 0.5);
   colors[2] = ColorStop(uColorStops[2], 1.0);
-  
+
   vec3 rampColor;
   COLOR_RAMP(colors, uv.x, rampColor);
-  
+
   float height = snoise(vec2(uv.x * 2.0 + uTime * 0.1, uTime * 0.25)) * 0.5 * uAmplitude;
   height = exp(height);
   height = (uv.y * 2.0 - height + 0.2);
   float intensity = 0.6 * height;
-  
+
   float midPoint = 0.20;
   float auroraAlpha = smoothstep(midPoint - uBlend * 0.5, midPoint + uBlend * 0.5, intensity);
-  
+
   vec3 auroraColor = rampColor;
-  
+
   float finalAlpha = auroraAlpha * smoothstep(0.0, 0.5, intensity) * uIntensity;
-  
+
   fragColor = vec4(auroraColor * finalAlpha, finalAlpha);
 }
-`;
+`
 
-let renderer: Renderer | null = null;
-let animateId = 0;
+let renderer: Renderer | null = null
+let animateId = 0
+let cancelAurora: (() => void) | null = null
 
-const initAurora = () => {
-  const container = containerRef.value;
-  if (!container) return;
+function initAurora(): (() => void) | null {
+  const container = containerRef.value
+  if (!container) return null
 
-  renderer = new Renderer({
-    alpha: true,
-    premultipliedAlpha: true,
-    antialias: true
-  });
+  renderer = new Renderer({ alpha: true, premultipliedAlpha: true, antialias: true })
+  const gl = renderer.gl
+  gl.clearColor(0, 0, 0, 0)
+  gl.enable(gl.BLEND)
+  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
+  gl.canvas.style.backgroundColor = 'transparent'
 
-  const gl = renderer.gl;
-  gl.clearColor(0, 0, 0, 0);
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  gl.canvas.style.backgroundColor = 'transparent';
-
-  let program: Program | undefined;
+  let program: Program | undefined
 
   const resize = () => {
-    if (!container) return;
-
-    const parentWidth = container.parentElement?.offsetWidth || container.offsetWidth || window.innerWidth;
-    const parentHeight = container.parentElement?.offsetHeight || container.offsetHeight || window.innerHeight;
-
-    const width = Math.max(parentWidth, 300);
-    const height = Math.max(parentHeight * 1.2, 300);
-
-    renderer!.setSize(width, height);
-    if (program) {
-      program.uniforms.uResolution.value = [width, height];
-    }
-  };
-
-  window.addEventListener('resize', resize);
-
-  const geometry = new Triangle(gl);
-  if (geometry.attributes.uv) {
-    delete geometry.attributes.uv;
+    if (!container) return
+    const parentWidth = container.parentElement?.offsetWidth || container.offsetWidth || window.innerWidth
+    const parentHeight = container.parentElement?.offsetHeight || container.offsetHeight || window.innerHeight
+    const width = Math.max(parentWidth, 300)
+    const height = Math.max(parentHeight * 1.2, 300)
+    renderer!.setSize(width, height)
+    if (program) program.uniforms.uResolution.value = [width, height]
   }
 
-  const colorStopsArray = props.colorStops.map(hex => {
-    const c = new Color(hex);
-    return [c.r, c.g, c.b];
-  });
+  const geometry = new Triangle(gl)
+  if (geometry.attributes.uv) delete geometry.attributes.uv
+
+  const colorStopsArray = props.colorStops.map((hex) => {
+    const c = new Color(hex)
+    return [c.r, c.g, c.b]
+  })
 
   program = new Program(gl, {
     vertex: VERT,
@@ -196,85 +183,74 @@ const initAurora = () => {
       uResolution: {
         value: [
           Math.max(container.parentElement?.offsetWidth || container.offsetWidth || window.innerWidth, 300),
-          Math.max(container.parentElement?.offsetHeight || container.offsetHeight || window.innerHeight, 300)
-        ]
+          Math.max(container.parentElement?.offsetHeight || container.offsetHeight || window.innerHeight, 300),
+        ],
       },
       uBlend: { value: props.blend },
-      uIntensity: { value: props.intensity }
-    }
-  });
+      uIntensity: { value: props.intensity },
+    },
+  })
 
-  const mesh = new Mesh(gl, { geometry, program });
-  container.appendChild(gl.canvas);
+  const mesh = new Mesh(gl, { geometry, program })
+  container.appendChild(gl.canvas)
 
-  gl.canvas.style.width = '100%';
-  gl.canvas.style.height = '100%';
-  gl.canvas.style.display = 'block';
-  gl.canvas.style.position = 'absolute';
-  gl.canvas.style.top = '0';
-  gl.canvas.style.left = '0';
+  Object.assign(gl.canvas.style, {
+    width: '100%',
+    height: '100%',
+    display: 'block',
+    position: 'absolute',
+    top: '0',
+    left: '0',
+  })
 
   const update = (t: number) => {
-    animateId = requestAnimationFrame(update);
-    const time = props.time ?? t * 0.01;
-    const speed = props.speed ?? 1.0;
+    animateId = requestAnimationFrame(update)
+    if (document.hidden) return
+    const time = props.time ?? t * 0.01
     if (program) {
-      program.uniforms.uTime.value = time * speed * 0.1;
-      program.uniforms.uAmplitude.value = props.amplitude ?? 1.0;
-      program.uniforms.uBlend.value = props.blend ?? 0.5;
-      program.uniforms.uIntensity.value = props.intensity ?? 1.0;
-      const stops = props.colorStops;
-      program.uniforms.uColorStops.value = stops.map((hex: string) => {
-        const c = new Color(hex);
-        return [c.r, c.g, c.b];
-      });
-      renderer!.render({ scene: mesh });
+      program.uniforms.uTime.value = time * props.speed * 0.1
+      program.uniforms.uAmplitude.value = props.amplitude
+      program.uniforms.uBlend.value = props.blend
+      program.uniforms.uIntensity.value = props.intensity
+      program.uniforms.uColorStops.value = props.colorStops.map((hex) => {
+        const c = new Color(hex)
+        return [c.r, c.g, c.b]
+      })
+      renderer!.render({ scene: mesh })
     }
-  };
-  animateId = requestAnimationFrame(update);
+  }
 
-  resize();
+  window.addEventListener('resize', resize)
+  animateId = requestAnimationFrame(update)
+  resize()
 
   return () => {
-    cancelAnimationFrame(animateId);
-    window.removeEventListener('resize', resize);
+    cancelAnimationFrame(animateId)
+    animateId = 0
+    window.removeEventListener('resize', resize)
     if (container && gl.canvas.parentNode === container) {
-      container.removeChild(gl.canvas);
+      container.removeChild(gl.canvas)
     }
-    gl.getExtension('WEBGL_lose_context')?.loseContext();
-  };
-};
-
-const cleanup = () => {
-  if (animateId) {
-    cancelAnimationFrame(animateId);
+    gl.getExtension('WEBGL_lose_context')?.loseContext()
+    renderer = null
   }
-  if (renderer) {
-    const gl = renderer.gl;
-    const container = containerRef.value;
-    if (container && gl.canvas.parentNode === container) {
-      container.removeChild(gl.canvas);
-    }
-    gl.getExtension('WEBGL_lose_context')?.loseContext();
-  }
-  renderer = null;
-};
+}
 
 onMounted(() => {
-  initAurora();
-});
+  cancelAurora = initAurora()
+})
 
 onUnmounted(() => {
-  cleanup();
-});
+  cancelAurora?.()
+})
 
 watch(
   () => [props.amplitude, props.intensity],
   () => {
-    cleanup();
-    initAurora();
+    cancelAurora?.()
+    cancelAurora = initAurora()
   }
-);
+)
 </script>
 
 <style scoped>

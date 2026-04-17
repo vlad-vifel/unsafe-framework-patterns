@@ -1,5 +1,6 @@
-import { ref } from 'vue'
 import Fuse from 'fuse.js'
+import { ref } from 'vue'
+
 import { allPatterns, type Pattern } from './usePatterns'
 
 const fuseOptions: Fuse.IFuseOptions<Pattern> = {

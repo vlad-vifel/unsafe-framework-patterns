@@ -1,16 +1,10 @@
 <template>
   <aside class="py-6 px-4">
-    <div v-if="anchors.length" class="sticky top-20">
-      <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-        On This Page
-      </p>
+    <div class="sticky top-20">
+      <p class="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">On This Page</p>
       <nav ref="navRef">
         <ul class="space-y-1 border-l border-border">
-          <li
-            v-for="anchor in anchors"
-            :key="anchor.id"
-            :data-anchor-id="anchor.id"
-          >
+          <li v-for="anchor in anchors" :key="anchor.id" :data-anchor-id="anchor.id">
             <button
               class="w-full text-left text-xs px-3 py-1.5 transition-colors leading-snug"
               :class="
@@ -18,6 +12,7 @@
                   ? 'text-primary font-medium border-l-2 border-primary -ml-px'
                   : 'text-muted-foreground hover:text-foreground'
               "
+              :aria-label="`Jump to ${anchor.title}`"
               @click="$emit('scroll', anchor.id)"
             >
               {{ anchor.title }}
@@ -26,14 +21,12 @@
         </ul>
       </nav>
     </div>
-    <div v-else class="text-xs text-muted-foreground">
-      Select a framework or category to see patterns here.
-    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { nextTick, ref, watch } from 'vue'
+
 import type { AnchorItem } from '@/composables/useAnchors'
 
 const props = defineProps<{
@@ -75,6 +68,6 @@ watch(
     } else if (iRect.top < cRect.top + 16) {
       container.scrollBy({ top: iRect.top - cRect.top - 16, behavior: 'smooth' })
     }
-  },
+  }
 )
 </script>

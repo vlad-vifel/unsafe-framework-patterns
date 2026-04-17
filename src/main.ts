@@ -1,7 +1,9 @@
-import { createApp } from 'vue'
-import router from './router'
-import App from './App.vue'
 import './assets/globals.css'
+
+import { createApp } from 'vue'
+
+import App from './App.vue'
+import router from './router'
 
 const saved = localStorage.getItem('theme')
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches

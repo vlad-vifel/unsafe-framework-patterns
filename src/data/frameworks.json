@@ -1,5 +1,5 @@
 [
-  { "id": "general", "name": "General" },
+  { "id": "general", "name": "General", "notFramework": true },
   { "id": "react",   "name": "React" },
   { "id": "vue",     "name": "Vue" },
   { "id": "angular", "name": "Angular" },

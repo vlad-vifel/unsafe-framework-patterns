@@ -2,12 +2,14 @@
   <div class="space-y-2">
     <template v-if="!query">
       <h1 class="text-3xl font-bold tracking-tight text-foreground">Search</h1>
-      <div class="relative">
-        <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        <input ref="defaultInputRef" v-model="inlineQuery" type="text" placeholder="Type to search"
-          class="w-full h-11 rounded-xl border border-border bg-background pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
-          @keydown.enter.prevent="submitInline" @keydown.escape="inlineQuery = ''" />
-      </div>
+      <button
+        class="flex w-full items-center gap-3 h-11 px-4 text-sm rounded-md border bg-background hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 cursor-pointer cursor-pointer"
+        @click="open"
+      >
+        <Search class="h-4 w-4 shrink-0" />
+        <span class="flex-1 text-left">Search patterns</span>
+        <Kbd>{{ isMac ? '⌘' : 'Ctrl' }} + K</Kbd>
+      </button>
     </template>
 
     <template v-else>
@@ -38,41 +40,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject, watch, nextTick, onMounted } from 'vue'
-import { useRoute, useRouter, RouterLink } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, RouterLink } from 'vue-router'
 import { Search } from 'lucide-vue-next'
 import { runSearch } from '@/composables/useSearch'
-import { useAnchors, type AnchorItem } from '@/composables/useAnchors'
+import { usePageAnchors } from '@/composables/usePageAnchors'
+import { useCommandPalette } from '@/composables/useCommandPalette'
 import PatternCard from '@/components/PatternCard.vue'
+import Kbd from '@/components/ui/kbd/Kbd.vue'
 
 const route = useRoute()
-const router = useRouter()
+const { open } = useCommandPalette()
+const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad|iPod/.test(navigator.platform)
 
 const query = computed(() => String(route.query.q ?? ''))
-
-const inlineQuery = ref('')
-const defaultInputRef = ref<HTMLInputElement | null>(null)
-
-onMounted(() => {
-  if (!query.value) nextTick(() => defaultInputRef.value?.focus())
-})
-
-function submitInline() {
-  const q = inlineQuery.value.trim()
-  if (!q) return
-  router.push({ name: 'search', query: { q } })
-}
 
 const patterns = computed(() => {
   if (!query.value.trim()) return []
   return runSearch(query.value)
 })
 
-const setAnchors = inject<(items: AnchorItem[]) => void>('setAnchors')
-const setActiveId = inject<(id: string) => void>('setActiveId')
-
-const { anchors, activeId } = useAnchors(patterns)
-
-watch(anchors, (items) => setAnchors?.(items), { immediate: true })
-watch(activeId, (id) => setActiveId?.(id), { immediate: true })
+usePageAnchors(patterns)
 </script>

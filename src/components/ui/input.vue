@@ -10,7 +10,7 @@
         'placeholder:text-muted-foreground',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
         'disabled:cursor-not-allowed disabled:opacity-50',
-        props.class,
+        props.class
       )
     "
     v-bind="$attrs"
@@ -20,6 +20,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+
 import { cn } from '@/lib/utils'
 
 const props = defineProps<{

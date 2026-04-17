@@ -1108,30 +1108,6 @@
     "lang": "svelte"
   },
   {
-    "id": "svelte-sveltekit-cookie-missing-httponly",
-    "title": "SvelteKit Cookie httpOnly:false Enables XSS Theft",
-    "framework": "svelte",
-    "category": "state-and-data-handling",
-    "description": "cookies.set() is called with httpOnly:false, allowing JavaScript access to the cookie and enabling theft via XSS. Remove httpOnly:false or set httpOnly:true explicitly.",
-    "tags": [
-      "sveltekit",
-      "svelte",
-      "cookie",
-      "httponly",
-      "sensitive-data"
-    ],
-    "references": [
-      "https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html"
-    ],
-    "bad_examples": [
-      "// ❌ unsafe - accessible via document.cookie\ncookies.set('session', token, {\n  httpOnly: false, secure: true, sameSite: 'lax'\n});"
-    ],
-    "good_examples": [
-      "// ✅ safe\ncookies.set('session', token, {\n  httpOnly: true, secure: true, sameSite: 'lax', path: '/'\n});"
-    ],
-    "lang": "svelte"
-  },
-  {
     "id": "svelte-sveltekit-cookie-missing-secure",
     "title": "SvelteKit Cookie secure:false Allows HTTP Transmission",
     "framework": "svelte",
@@ -1246,31 +1222,6 @@
     ],
     "good_examples": [
       "// ✅ safe\nimport { redirect } from 'next/navigation';\nexport default function Page({ searchParams }: { searchParams: { next: string } }) {\n  const next = searchParams.next ?? '/';\n  if (!next.startsWith('/') || next.startsWith('//')) redirect('/');\n  else redirect(next);\n}"
-    ],
-    "lang": "tsx"
-  },
-  {
-    "id": "react-next-response-redirect-taint",
-    "title": "Next.js NextResponse.redirect Open Redirect in Middleware",
-    "framework": "react",
-    "category": "routing-and-access-control",
-    "description": "Untrusted user input flows into NextResponse.redirect() in Next.js middleware. A user-controlled redirect URL enables phishing and SSRF chain attacks. Validate the URL origin and protocol before redirecting.",
-    "tags": [
-      "nextjs",
-      "react",
-      "open-redirect",
-      "middleware",
-      "ssrf",
-      "taint"
-    ],
-    "references": [
-      "https://nvd.nist.gov/vuln/detail/CVE-2025-57822"
-    ],
-    "bad_examples": [
-      "// ❌ unsafe (middleware.ts)\nimport { NextResponse } from 'next/server';\nexport function middleware(req: Request) {\n  const next = req.nextUrl.searchParams.get('next');\n  return NextResponse.redirect(next);\n}"
-    ],
-    "good_examples": [
-      "// ✅ safe\nimport { NextResponse } from 'next/server';\nexport function middleware(req: Request) {\n  const next = req.nextUrl.searchParams.get('next') ?? '/';\n  const url = new URL(next, req.nextUrl.origin);\n  if (url.origin !== req.nextUrl.origin) return NextResponse.redirect(new URL('/', req.url));\n  return NextResponse.redirect(url);\n}"
     ],
     "lang": "tsx"
   },
@@ -1565,29 +1516,6 @@
     "lang": "javascript"
   },
   {
-    "id": "dom-object-prototype-direct-modification",
-    "title": "Direct Object.prototype Modification",
-    "framework": "general",
-    "category": "global-state-and-data-access",
-    "description": "Application code directly modifies Object.prototype or a constructor prototype. This pollutes the prototype chain for all objects, potentially enabling XSS or RCE. Polyfills should use feature detection, not direct Object.prototype modification.",
-    "tags": [
-      "dom",
-      "prototype-pollution",
-      "Object.prototype",
-      "polyfill"
-    ],
-    "references": [
-      "https://cheatsheetseries.owasp.org/cheatsheets/Prototype_Pollution_Prevention_Cheat_Sheet.html"
-    ],
-    "bad_examples": [
-      "// ❌ unsafe\nObject.prototype.isAdmin = false;\nwindow.__proto__.trackingId = generateId();"
-    ],
-    "good_examples": [
-      "// ✅ safe polyfill with feature detection\nif (typeof Object.prototype.myMethod === 'undefined') {\n  Object.defineProperty(Object.prototype, 'myMethod', {\n    value() { /* polyfill */ },\n    writable: true, configurable: true, enumerable: false\n  });\n}"
-    ],
-    "lang": "javascript"
-  },
-  {
     "id": "dom-window-bracket-access-taint",
     "title": "Arbitrary window[] Access via User-Controlled Key",
     "framework": "general",
@@ -1657,30 +1585,6 @@
     ],
     "good_examples": [
       "// ✅ safe - module-scoped closure\nconst tokenStore = (() => {\n  let token: string | null = null;\n  return { set: (t: string) => { token = t; }, get: () => token };\n})();"
-    ],
-    "lang": "javascript"
-  },
-  {
-    "id": "dom-clobbering-var-global-fallback",
-    "title": "DOM Clobbering via var window.X Fallback",
-    "framework": "general",
-    "category": "global-state-and-data-access",
-    "description": "A var declaration uses window.X as a fallback value. Browsers create window.X references for HTML elements with id=\"X\", so an attacker with HTML injection can shadow this variable with an HTMLElement. Replace with let/const declarations and avoid window.X || {} fallback patterns.",
-    "tags": [
-      "dom",
-      "dom-clobbering",
-      "var",
-      "xss",
-      "html-injection"
-    ],
-    "references": [
-      "https://portswigger.net/research/dom-clobbering"
-    ],
-    "bad_examples": [
-      "// ❌ unsafe - <form id=\"config\"><input id=\"isAdmin\"> clobbers this\nvar config = window.config || {};\nif (config.isAdmin) grantElevatedAccess();"
-    ],
-    "good_examples": [
-      "// ✅ safe - use const/let, never window.X fallback\nconst config: AppConfig = { isAdmin: false, theme: 'light' };"
     ],
     "lang": "javascript"
   },

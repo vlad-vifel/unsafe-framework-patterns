@@ -1,4 +1,5 @@
-import { ref, onUnmounted, nextTick, watch } from 'vue'
+import { nextTick, onUnmounted, type Ref,ref, watch } from 'vue'
+
 import type { Pattern } from './usePatterns'
 
 export interface AnchorItem {
@@ -7,13 +8,18 @@ export interface AnchorItem {
   active: boolean
 }
 
-export function useAnchors(patterns: { value: Pattern[] }) {
+export interface AnchorsState {
+  anchors: Ref<AnchorItem[]>
+  activeId: Ref<string>
+}
+
+export function useAnchors(patterns: Ref<Pattern[]>): AnchorsState {
   const anchors = ref<AnchorItem[]>([])
   const activeId = ref<string>('')
 
   let observer: IntersectionObserver | null = null
 
-  function buildAnchors() {
+  function buildAnchors(): void {
     anchors.value = patterns.value.map((p) => ({
       id: p.id,
       title: p.title,
@@ -21,7 +27,7 @@ export function useAnchors(patterns: { value: Pattern[] }) {
     }))
   }
 
-  function observeElements() {
+  function observeElements(): void {
     observer?.disconnect()
 
     const root = document.getElementById('main-content')
@@ -41,7 +47,7 @@ export function useAnchors(patterns: { value: Pattern[] }) {
         root,
         rootMargin: '-56px 0px -55% 0px',
         threshold: 0,
-      },
+      }
     )
 
     nextTick(() => {
@@ -58,7 +64,7 @@ export function useAnchors(patterns: { value: Pattern[] }) {
       buildAnchors()
       observeElements()
     },
-    { immediate: true },
+    { immediate: true }
   )
 
   onUnmounted(() => {

@@ -1,5 +1,11 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
+declare module 'vue-router' {
+  interface RouteMeta {
+    title?: string
+  }
+}
+
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
@@ -8,6 +14,12 @@ const router = createRouter({
       name: 'home',
       component: () => import('@/pages/HomePage.vue'),
       meta: { title: 'Home' },
+    },
+    {
+      path: '/patterns',
+      name: 'patterns',
+      component: () => import('@/pages/PatternsPage.vue'),
+      meta: { title: 'All patterns' },
     },
     {
       path: '/frameworks',
@@ -48,13 +60,11 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((_to, _from, next) => {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       const main = document.getElementById('main-content')
-      if (main) {
-        main.scrollTop = 0
-      }
+      if (main) main.scrollTop = 0
     })
   })
   next()

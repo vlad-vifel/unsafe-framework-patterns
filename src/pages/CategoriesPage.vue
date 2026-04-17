@@ -23,19 +23,15 @@
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue'
-import { RouterLink } from 'vue-router'
 import { ArrowRight } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
+
+import { clearPageAnchors } from '@/composables/usePageAnchors'
 import { allCategories, allPatterns } from '@/composables/usePatterns'
-import type { AnchorItem } from '@/composables/useAnchors'
 
-const setAnchors = inject<(items: AnchorItem[]) => void>('setAnchors')
-const setActiveId = inject<(id: string) => void>('setActiveId')
-
-setAnchors?.([])
-setActiveId?.('')
+clearPageAnchors()
 
 function patternCount(catId: string): number {
-  return allPatterns.filter(p => p.category === catId).length
+  return allPatterns.filter((p) => p.category === catId).length
 }
 </script>
