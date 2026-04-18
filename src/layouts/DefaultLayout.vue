@@ -70,7 +70,11 @@
       </header>
 
       <div class="relative flex flex-1 min-h-0 overflow-hidden">
-        <main id="main-content" class="relative flex-1 overflow-y-auto min-w-0" @scroll="onMainScroll">
+        <main
+          id="main-content"
+          class="relative flex-1 overflow-y-auto overflow-x-hidden min-w-0"
+          @scroll="onMainScroll"
+        >
           <Aurora
             v-if="isHome"
             :color-stops="[brandColorLighter, brandColor, brandColorLighter]"

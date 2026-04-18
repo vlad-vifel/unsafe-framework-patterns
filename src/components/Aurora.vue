@@ -157,10 +157,10 @@ function initAurora() {
 
   const resize = () => {
     if (!container) return
-    const parentWidth = container.parentElement?.offsetWidth || container.offsetWidth || window.innerWidth
-    const parentHeight = container.parentElement?.offsetHeight || container.offsetHeight || window.innerHeight
-    const width = Math.max(parentWidth, 300)
-    const height = Math.max(parentHeight * 1.2, 300)
+
+    const parent = container.parentElement
+    const width = Math.max(parent ? parent.clientWidth : container.clientWidth || window.innerWidth, 300)
+    const height = Math.max((parent ? parent.clientHeight : container.clientHeight || window.innerHeight) * 1.2, 300)
     renderer!.setSize(width, height)
     if (program) program.uniforms.uResolution.value = [width, height]
   }
